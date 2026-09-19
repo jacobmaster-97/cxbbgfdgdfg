@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#6b64de" />
+    <meta name="description" content="教師課堂工具互動介面原型" />
+    <title>教師課堂工具</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%236b64de'/%3E%3Cpath d='M17 20h30v24H17z' fill='white'/%3E%3Cpath d='M32 16v32M22 28h20M22 36h13' stroke='%236b64de' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <svg class="svg-defs" aria-hidden="true">
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></symbol>
+      <symbol id="i-class" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-2a5 5 0 0 1 10 0v2M14 15a4 4 0 0 1 7 3v2"/></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9z"/><path d="M18 4v5M15.5 6.5h5"/></symbol>
+      <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v5l3 2M9 2h6M12 2v3"/></symbol>
+      <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="m8 15 5-5 3 3M8 21h8M12 18v3"/></symbol>
+      <symbol id="i-paper" viewBox="0 0 24 24"><path d="M6 2h9l4 4v16H6z"/><path d="M15 2v5h5M9 12h6M9 16h4M18 14v6M15 17h6"/></symbol>
+      <symbol id="i-quiz" viewBox="0 0 24 24"><path d="m13 2-8 12h7l-1 8 8-12h-7z"/><path d="M20 3a3 3 0 0 1 0 6v2M20 15h.01"/></symbol>
+      <symbol id="i-match" viewBox="0 0 24 24"><rect x="3" y="5" width="11" height="15" rx="2"/><rect x="10" y="3" width="11" height="15" rx="2"/><path d="m15.5 8 1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1z"/></symbol>
+      <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6L8 10zM17 9a4 4 0 0 1 0 6M19.5 6.5a8 8 0 0 1 0 11"/></symbol>
+      <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0M7 12a8 8 0 0 1 10 0M10 15a4 4 0 0 1 4 0"/><circle cx="12" cy="19" r="1"/></symbol>
+      <symbol id="i-fullscreen" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    </svg>
+
+    <main class="desktop" id="desktop">
+      <div class="statusbar" aria-label="系統狀態">
+        <span id="statusTime">8:39</span>
+        <div class="status-icons"><svg><use href="#i-wifi"/></svg><span>100%</span><span class="battery"><i></i></span></div>
+      </div>
+
+      <header class="welcome">
+        <div>
+          <p class="eyebrow">教師工作桌面</p>
+          <h1 id="heroTime">8:39</h1>
+          <p id="heroDate">星期二，10月28日</p>
+        </div>
+        <div class="display-actions">
+          <button class="fullscreen-button" id="fullscreenButton" type="button" aria-pressed="false" aria-label="進入全螢幕"><svg><use href="#i-fullscreen"/></svg><span>全螢幕</span></button>
+          <button class="quiet-button" id="focusButton" type="button">專注模式</button>
+        </div>
+      </header>
+
+      <section class="widgets" aria-label="課堂小工具">
+        <article class="widget schedule-widget">
+          <div class="widget-heading">
+            <div><span class="mini-icon calendar-icon">▦</span><h2>上課時間表</h2></div>
+            <button class="text-button" data-app="上課時間表">查看全部 <span>›</span></button>
+          </div>
+          <div class="lesson-list" role="list">
+            <button class="lesson active" type="button"><time>10:00</time><span>數學 · 3A</span><b>進行中</b></button>
+            <button class="lesson" type="button"><time>11:00</time><span>英文 · 3A</span><b>下一節</b></button>
+            <button class="lesson" type="button"><time>12:00</time><span>常識 · 3B</span><b></b></button>
+          </div>
+        </article>
+
+        <article class="widget calendar-widget">
+          <div class="widget-heading">
+            <div><span class="mini-icon calendar-icon">▦</span><h2>行事曆</h2></div>
+            <div class="month-controls"><button aria-label="上個月" id="prevMonth">‹</button><strong id="monthLabel">2026年9月</strong><button aria-label="下個月" id="nextMonth">›</button></div>
+          </div>
+          <div class="calendar-grid weekdays" aria-hidden="true"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+          <div class="calendar-grid" id="calendarGrid" aria-label="月曆"></div>
+          <p class="selected-event" id="selectedEvent"><span></span> 16日：數學小測 · 3A</p>
+        </article>
+
+        <article class="widget clock-widget">
+          <div class="clock-topline"><span>報時時鐘</span><button class="sound-button" id="speakNow" aria-label="立即報時"><svg><use href="#i-speaker"/></svg></button></div>
+          <div class="analog-clock" aria-hidden="true">
+            <span class="clock-number n12">12</span><span class="clock-number n3">3</span><span class="clock-number n6">6</span><span class="clock-number n9">9</span>
+            <i class="hand hour-hand" id="hourHand"></i><i class="hand minute-hand" id="minuteHand"></i><i class="hand second-hand" id="secondHand"></i><i class="clock-pin"></i>
+          </div>
+          <strong class="digital-time" id="digitalTime">08:39</strong>
+          <button class="announce-toggle is-on" id="announceToggle" type="button" aria-pressed="true"><svg><use href="#i-speaker"/></svg><span>整點報時：開</span></button>
+        </article>
+      </section>
+
+      <nav class="dock" aria-label="工具欄">
+        <button class="dock-item" data-app="班別管理"><span class="dock-blue"><svg><use href="#i-class"/></svg></span><small>班別</small></button>
+        <button class="dock-item" data-app="加分"><span class="dock-gold"><svg><use href="#i-star"/></svg></span><small>加分</small></button>
+        <button class="dock-item" data-app="計時工具"><span class="dock-green"><svg><use href="#i-timer"/></svg></span><small>計時</small></button>
+        <button class="dock-item" data-app="電子白板"><span class="dock-purple"><svg><use href="#i-board"/></svg></span><small>白板</small></button>
+        <button class="dock-item" data-app="功課紙"><span class="dock-coral"><svg><use href="#i-paper"/></svg></span><small>功課紙</small></button>
+        <button class="dock-item hide-small" data-app="數學賓果" aria-label="數學賓果大激鬥"><span class="bingo-toolbar-icon"><img src="./assets/bingo-icon.png" alt="" /></span><small>賓果</small></button>
+        <button class="dock-item hide-small" data-app="乘法寶藏" aria-label="乘法寶藏爭奪戰"><span class="treasure-toolbar-icon"><img src="./assets/multiplication-treasure-icon.png" alt="" /></span><small>尋寶</small></button>
+        <i class="dock-divider"></i>
+        <button class="dock-item" data-app="設定"><span class="dock-slate"><svg><use href="#i-settings"/></svg></span><small>設定</small></button>
+      </nav>
+    </main>
+
+    <dialog class="app-dialog" id="appDialog">
+      <div class="dialog-shell">
+        <header><div><p>課堂工具</p><h2 id="dialogTitle">班別管理</h2></div><button id="closeDialog" aria-label="關閉"><svg><use href="#i-close"/></svg></button></header>
+        <div class="dialog-body" id="dialogBody"></div>
+      </div>
+    </dialog>
+
+    <aside class="standalone-timer-mini" id="standaloneTimerMini" hidden aria-label="縮小的獨立計時器">
+      <button type="button" class="mini-timer-main" data-mini-timer-action="expand"><span>獨立計時</span><strong id="standaloneMiniDisplay">05:00</strong></button>
+      <button type="button" class="mini-timer-close" data-mini-timer-action="close" aria-label="關閉獨立計時器">×</button>
+    </aside>
+
+    <section class="exam-projection" id="examProjection" hidden aria-live="polite" aria-label="考試投影顯示">
+      <div class="projection-alert" id="projectionAlert" role="alert">偵測到裝置時間曾被更改，請核對目前時間。<button type="button" data-projection-action="acknowledge">已核對</button></div>
+      <div class="projection-content" id="projectionContent"></div>
+      <div class="projection-controls" aria-label="考試顯示控制"><button type="button" data-projection-action="edit">修改設定</button><button type="button" data-projection-action="exit">退出顯示</button></div>
+    </section>
+
+    <section class="whiteboard" id="whiteboard" hidden aria-label="電子白板">
+      <div class="whiteboard-canvas-wrap wb-paper" id="wbCanvasWrap"><canvas id="wbCanvas" aria-label="電子白板書寫畫布"></canvas></div>
+      <div class="wb-board-indicator" id="wbBoardIndicator">白板 1</div>
+      <div class="wb-left-actions">
+        <button class="wb-float-button" type="button" data-wb-action="exit" aria-label="返回桌面">← <span>返回桌面</span></button>
+      </div>
+      <aside class="wb-timer" id="wbTimer" aria-label="白板計時器">
+        <button class="wb-timer-summary" type="button" data-wb-action="toggle-timer" aria-expanded="true"><span>計時器</span><strong id="wbTimerDisplay">05:00</strong><i>⌄</i></button>
+        <div class="wb-timer-controls" id="wbTimerControls">
+          <div class="wb-timer-inputs"><label>分<input id="wbTimerMinutes" type="number" min="0" max="180" value="5"></label><label>秒<input id="wbTimerSeconds" type="number" min="0" max="59" value="0"></label></div>
+          <div class="wb-timer-actions"><button type="button" data-wb-action="timer-start">開始</button><button type="button" data-wb-action="timer-pause">暫停</button><button type="button" data-wb-action="timer-add">+1分</button><button type="button" data-wb-action="timer-reset">重設</button></div>
+        </div>
+      </aside>
+      <nav class="wb-toolbar" aria-label="白板工具欄">
+        <div class="wb-tool-group"><button class="wb-tool is-active" type="button" data-wb-tool="pen" aria-pressed="true"><b>✎</b><span>畫筆</span></button><button class="wb-tool" type="button" data-wb-tool="line" aria-pressed="false" title="畫直線"><b>╱</b><span>直線</span></button><button class="wb-tool" type="button" data-wb-tool="highlighter" aria-pressed="false"><b>▰</b><span>螢光筆</span></button><button class="wb-tool" type="button" data-wb-tool="eraser" aria-pressed="false"><b>⌫</b><span>擦膠</span></button><button class="wb-tool paper-only" type="button" data-wb-tool="move" aria-pressed="false" title="移動功課紙"><b>✥</b><span>移動</span></button></div>
+        <i class="wb-divider"></i>
+        <div class="wb-colors" aria-label="筆觸顏色"><button class="wb-color is-active" type="button" data-wb-color="#111827" style="--swatch:#111827" aria-label="黑色"></button><button class="wb-color" type="button" data-wb-color="#ef476f" style="--swatch:#ef476f" aria-label="紅色"></button><button class="wb-color" type="button" data-wb-color="#2878e7" style="--swatch:#2878e7" aria-label="藍色"></button><button class="wb-color" type="button" data-wb-color="#13a66d" style="--swatch:#13a66d" aria-label="綠色"></button><button class="wb-color" type="button" data-wb-color="#f2bd28" style="--swatch:#f2bd28" aria-label="黃色"></button><button class="wb-color" type="button" data-wb-color="#8c58dd" style="--swatch:#8c58dd" aria-label="紫色"></button><button class="wb-color wb-white" type="button" data-wb-color="#ffffff" style="--swatch:#ffffff" aria-label="白色"></button></div>
+        <div class="wb-size"><span>粗幼</span><input id="wbSize" type="range" min="2" max="28" value="6" aria-label="筆觸粗幼"></div>
+        <i class="wb-divider"></i>
+        <div class="wb-tool-group"><button class="wb-tool compact" type="button" data-wb-action="undo" title="復原"><b>↶</b><span>復原</span></button><button class="wb-tool compact" type="button" data-wb-action="redo" title="重做"><b>↷</b><span>重做</span></button><button class="wb-tool compact" type="button" data-wb-action="background" title="背景"><b>◐</b><span>背景</span></button><button class="wb-tool compact" type="button" data-wb-action="boards" title="白板"><b>▤</b><span>白板</span></button><button class="wb-tool compact paper-only" type="button" data-wb-action="zoom-out" title="縮小功課紙"><b>−</b><span>縮小</span></button><button class="wb-tool compact paper-only wb-zoom-display" type="button" data-wb-action="reset-view" title="重設比例及位置"><b id="wbPaperZoom">100%</b><span>重設</span></button><button class="wb-tool compact paper-only" type="button" data-wb-action="zoom-in" title="放大功課紙"><b>＋</b><span>放大</span></button><button class="wb-tool compact" type="button" data-wb-action="export" title="匯出 PNG"><b>⇩</b><span>PNG</span></button><button class="wb-tool compact danger" type="button" data-wb-action="clear" title="清除白板"><b>⌫</b><span>清除</span></button><button class="wb-tool compact" type="button" data-wb-action="fullscreen" title="全螢幕"><b>⛶</b><span>全螢幕</span></button></div>
+      </nav>
+      <section class="wb-popover" id="wbBackgroundMenu" hidden aria-label="白板背景"><p>選擇背景</p><button type="button" data-wb-background="paper"><i class="bg-sample paper"></i>純白</button><button type="button" data-wb-background="chalk"><i class="bg-sample chalk"></i>仿課室黑板</button></section>
+      <section class="wb-popover wb-boards-menu" id="wbBoardsMenu" hidden aria-label="白板列表"><div class="wb-popover-title"><p>我的白板</p><button type="button" data-wb-action="new-board">＋ 建立新白板</button></div><div id="wbBoardsList"></div></section>
+    </section>
+
+    <section class="bingo-game" id="bingoGame" hidden aria-label="數學賓果大激鬥">
+      <iframe id="bingoFrame" title="數學賓果大激鬥" src="./bingo.html" allowfullscreen></iframe>
+      <button class="bingo-exit" id="closeBingoGame" type="button">← 返回工具</button>
+    </section>
+
+    <section class="treasure-game" id="treasureGame" hidden aria-label="乘法寶藏爭奪戰">
+      <iframe id="treasureFrame" title="乘法寶藏爭奪戰" src="./multiplication-treasure.html" allowfullscreen></iframe>
+      <button class="treasure-exit" id="closeTreasureGame" type="button">← 返回工具</button>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>

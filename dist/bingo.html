@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#183153">
+  <title>數學賓果大激鬥</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23183153'/%3E%3Cpath d='M15 18h34v28H15z' fill='%23ffd95a'/%3E%3Cpath d='M22 25h20M22 32h20M22 39h20M29 22v20M36 22v20' stroke='%23183153' stroke-width='3'/%3E%3C/svg%3E">
+  <style>
+    :root { --ink:#183153; --muted:#60738b; --paper:#fffdf6; --sky:#e7f6ff; --yellow:#ffd95a; --red:#ea5b5b; --blue:#2b8dda; --green:#42b979; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:var(--ink); font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif; background:radial-gradient(circle at 12% 8%,#fff4ac 0 7%,transparent 28%),linear-gradient(135deg,#dff5ff,#f6fbff 45%,#fff5ce); }
+    :fullscreen { background:linear-gradient(135deg,#dff5ff,#f6fbff 45%,#fff5ce); overflow:auto; }
+    :fullscreen .app { min-height:100vh; padding-top:24px; }
+    button, input, select { font:inherit; } button { border:0; cursor:pointer; touch-action:manipulation; }
+    .app { width:min(1480px,96vw); margin:auto; padding:clamp(14px,2vw,28px) 0 34px; }
+    .hidden { display:none !important; }
+    .setup, .finish { width:min(640px,100%); margin:7vh auto; padding:clamp(24px,5vw,44px); text-align:center; border:4px solid white; border-radius:30px; background:rgba(255,253,246,.94); box-shadow:0 14px 40px rgba(37,86,120,.2); }
+    h1, h2, p { margin-top:0; } h1 { margin-bottom:7px; font-size:clamp(2rem,5vw,3.5rem); line-height:1.15; } h2 { font-size:2rem; }
+    .lead { color:var(--muted); font-size:1.08rem; line-height:1.65; }
+    .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:25px 0; text-align:left; }
+    label { color:#3f5772; font-weight:800; } input, select { display:block; width:100%; margin-top:7px; padding:12px; border:2px solid #c5deec; border-radius:13px; background:white; color:var(--ink); }
+    .primary, .secondary { border-radius:15px; padding:13px 20px; font-weight:900; font-size:1.05rem; } .primary { background:var(--ink); color:white; box-shadow:0 4px 0 #0b1d35; } .secondary { background:#e2eff5; color:var(--ink); }
+    .large { padding:16px 34px; font-size:1.18rem; }
+    .rules { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:20px 0; } .rule { padding:8px 12px; border-radius:999px; background:#edf8fc; color:#43617a; font-size:.9rem; font-weight:800; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:18px; } header h1 { margin:0; font-size:clamp(1.6rem,3.2vw,2.7rem); } .header-note { margin:5px 0 0; color:var(--muted); font-weight:700; }
+    .top-actions { display:flex; align-items:center; gap:10px; } .timer { min-width:106px; padding:11px 14px; border-radius:15px; background:var(--ink); color:#fff; text-align:center; font-size:1.5rem; font-weight:900; }
+    .arena { display:grid; grid-template-columns:minmax(250px,1fr) minmax(290px,.9fr) minmax(250px,1fr); gap:clamp(12px,2vw,28px); align-items:stretch; }
+    .team-card, .question-card { border-radius:26px; background:rgba(255,253,246,.97); box-shadow:0 10px 25px rgba(27,81,114,.16); overflow:hidden; }
+    .team-card { border:4px solid transparent; transition:transform .2s,border-color .2s; } .team-card.active { border-color:var(--team); transform:translateY(-4px); }
+    .team-header { display:flex; justify-content:space-between; align-items:center; padding:15px 17px 13px; border-bottom:2px dashed #d7e5eb; } .team-title { font-size:clamp(1.1rem,2vw,1.45rem); font-weight:900; } .team-score { color:var(--team); font-size:1.35rem; font-weight:900; }
+    .status { min-height:28px; padding:8px 15px 0; color:var(--muted); font-weight:800; font-size:.92rem; }
+    .bingo-card { display:grid; gap:7px; padding:14px 15px 18px; } .bingo-card.grid-4 { grid-template-columns:repeat(4,1fr); } .bingo-card.grid-5 { grid-template-columns:repeat(5,1fr); }
+    .number { aspect-ratio:1; min-height:47px; border-radius:13px; background:#eaf5fa; color:var(--ink); font-weight:900; font-size:clamp(1rem,2vw,1.55rem); box-shadow:inset 0 -3px 0 #c8e3ef; transition:.15s; } .number:hover:not(:disabled) { background:#d7edf8; transform:scale(1.03); }
+    .number.marked { color:white; background:var(--team); box-shadow:inset 0 -3px 0 rgba(0,0,0,.18); position:relative; } .number.marked::after { content:'✓'; position:absolute; inset:0; display:grid; place-items:center; font-size:1.7em; color:white; text-shadow:0 1px 2px rgba(0,0,0,.22); }
+    .number.marked span { opacity:.95; font-size:.72em; transform:translateY(-.6em); } .number.wrong { animation:shake .35s; background:#ffd7d7; } .number:disabled { cursor:default; }
+    @keyframes shake { 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
+    .question-card { display:flex; flex-direction:column; justify-content:center; min-height:450px; padding:23px; text-align:center; border:4px solid var(--yellow); }
+    .turn { margin:0 auto 13px; padding:8px 14px; border-radius:999px; background:#fff4bd; color:#785c00; font-weight:900; } .equation { font-size:clamp(3.6rem,8vw,7rem); font-weight:900; letter-spacing:.03em; line-height:1; } .instruction { min-height:3.2em; margin:20px 0 0; color:var(--muted); font-size:1.08rem; font-weight:800; line-height:1.55; }
+    .round { margin-top:12px; color:#789; font-weight:800; } .bingo-alert { margin-top:22px; min-height:1.6em; color:#de8710; font-size:1.35rem; font-weight:900; }
+    .controls { display:flex; justify-content:center; gap:9px; flex-wrap:wrap; margin-top:20px; }
+    .completion-board { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 18px; }
+    .completion { display:flex; align-items:center; justify-content:center; min-height:54px; padding:10px 16px; border-radius:17px; border:3px solid var(--team); background:rgba(255,253,246,.94); color:#64758a; font-size:1.05rem; font-weight:900; box-shadow:0 5px 13px rgba(27,81,114,.1); }
+    .completion.done { background:color-mix(in srgb,var(--team) 14%,white); color:var(--ink); } .completion.correct { background:color-mix(in srgb,var(--team) 22%,white); } .completion.skipped { border-style:dashed; }
+    .skip-wrap { padding:0 15px 17px; } .skip { width:100%; padding:12px; border:2px dashed var(--team); border-radius:13px; background:white; color:var(--team); font-weight:900; } .skip:hover:not(:disabled) { background:color-mix(in srgb,var(--team) 10%,white); } .skip:disabled { cursor:default; opacity:.5; }
+    .winner { color:#d77c00; font-size:clamp(2rem,5vw,3rem); font-weight:900; } .final-score { color:var(--muted); font-size:1.15rem; line-height:1.7; }
+    @media (max-width:900px) { .arena { grid-template-columns:1fr 1fr; } .question-card { grid-column:1 / -1; grid-row:1; min-height:250px; } .equation { font-size:clamp(3.8rem,12vw,6rem); } }
+    @media (max-width:560px) { .app { width:min(96vw,500px); } header { align-items:flex-start; } .header-note { display:none; } .top-actions .secondary { padding:10px; font-size:.9rem; } .timer { min-width:76px; font-size:1.1rem; } .arena, .completion-board { grid-template-columns:1fr; } .question-card { grid-column:auto; } .setup-grid { grid-template-columns:1fr; } .team-card.active { transform:none; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="setup" class="setup">
+      <h1>🎯 數學賓果大激鬥</h1>
+      <p class="lead">兩隊同時解答同一條 1–10 乘法題。找出答案並按在自己的賓果卡上；找不到便按「跳過此題」，率先連成一線就贏！</p>
+      <div class="rules"><span class="rule">每題自動生成</span><span class="rule">兩隊同步作答</span><span class="rule">橫、直、斜線都算賓果</span></div>
+      <div class="setup-grid">
+        <label>第一隊名稱<input id="team1Name" maxlength="12" value="第一隊"></label>
+        <label>第二隊名稱<input id="team2Name" maxlength="12" value="第二隊"></label>
+        <label>答案卡大小<select id="cardSize"><option value="4">4 × 4（快速）</option><option value="5" selected>5 × 5（標準）</option></select></label>
+        <label>限時<select id="duration"><option value="180">3 分鐘</option><option value="300" selected>5 分鐘</option><option value="600">10 分鐘</option></select></label>
+      </div>
+      <button id="start" class="primary large">開始大激鬥</button>
+    </section>
+
+    <section id="game" class="hidden">
+      <header><div><h1>🎯 數學賓果大激鬥</h1><p class="header-note">兩隊同時作答；兩隊完成本題後才會顯示下一題。</p></div><div class="top-actions"><div id="timer" class="timer">5:00</div><button id="fullscreen" class="secondary" aria-pressed="false">⛶ 全螢幕</button><button id="restart" class="secondary">重新開始</button></div></header>
+      <section class="completion-board" aria-label="本題完成狀態"><div id="progress0" class="completion" style="--team:#e65362"></div><div id="progress1" class="completion" style="--team:#2589d7"></div></section>
+      <section class="arena" aria-label="遊戲區">
+        <article id="team0Card" class="team-card" style="--team:#e65362"><div class="team-header"><span id="team0Title" class="team-title">第一隊答案卡</span><span id="score0" class="team-score">0 分</span></div><div id="status0" class="status"></div><div id="board0" class="bingo-card"></div><div class="skip-wrap"><button id="skip0" class="skip" style="--team:#e65362">找不到答案／跳過此題</button></div></article>
+        <section class="question-card" aria-live="polite"><div id="turn" class="turn">兩隊同時作答</div><div id="equation" class="equation">7 × 8</div><p id="instruction" class="instruction">在自己的答案卡找出正確答案；找不到時，按答案卡下方的跳過按鈕。</p><div id="round" class="round"></div><div id="bingoAlert" class="bingo-alert"></div></section>
+        <article id="team1Card" class="team-card" style="--team:#2589d7"><div class="team-header"><span id="team1Title" class="team-title">第二隊答案卡</span><span id="score1" class="team-score">0 分</span></div><div id="status1" class="status"></div><div id="board1" class="bingo-card"></div><div class="skip-wrap"><button id="skip1" class="skip" style="--team:#2589d7">找不到答案／跳過此題</button></div></article>
+      </section>
+      <div class="controls"><button id="end" class="secondary">結束遊戲</button></div>
+    </section>
+
+    <section id="finish" class="finish hidden"><h2>🏆 遊戲結束</h2><div id="winner" class="winner"></div><p id="finalScore" class="final-score"></p><button id="playAgain" class="primary large">再玩一次</button></section>
+  </main>
+  <script>
+    const $ = id => document.getElementById(id);
+    const colors = ['#e65362', '#2589d7'];
+    const allProducts = [...new Set(Array.from({length:10}, (_,a) => Array.from({length:10}, (_,b) => (a+1)*(b+1))).flat())];
+    let teams, size, seconds, timer, nextQuestionTimer, usedQuestions, question, gameOver, questionCount;
+    const shuffle = list => [...list].sort(() => Math.random() - .5);
+    const formatTime = n => `${Math.floor(Math.max(0,n)/60)}:${String(Math.max(0,n)%60).padStart(2,'0')}`;
+
+    function makeCard() { return shuffle(allProducts).slice(0, size * size).map(value => ({value, marked:false})); }
+    function drawBoard(index) {
+      const board = $(`board${index}`); board.className = `bingo-card grid-${size}`;
+      const locked = gameOver || teams[index].result !== 'pending';
+      board.innerHTML = teams[index].card.map((item, position) => `<button class="number ${item.marked ? 'marked' : ''}" style="--team:${colors[index]}" data-position="${position}" ${locked ? 'disabled' : ''} aria-label="答案 ${item.value}"><span>${item.value}</span></button>`).join('');
+      board.querySelectorAll('button').forEach(button => button.addEventListener('click', () => chooseAnswer(index, Number(button.dataset.position), button)));
+    }
+    function updateChrome() {
+      [0,1].forEach(i => {
+        const team = teams[i];
+        $(`team${i}Card`).classList.toggle('active', team.result === 'pending' && !gameOver);
+        $(`score${i}`).textContent = `${teams[i].score} 分`;
+        const resultText = team.result === 'correct' ? '✓ 已答對' : team.result === 'skipped' ? '↷ 已跳過此題' : '● 正在作答';
+        $(`status${i}`).textContent = gameOver ? '' : resultText;
+        const progress = $(`progress${i}`);
+        progress.className = `completion ${team.result === 'pending' ? '' : 'done'} ${team.result}`;
+        progress.textContent = `${team.name}：${resultText}`;
+        $(`skip${i}`).disabled = gameOver || team.result !== 'pending';
+        drawBoard(i);
+      });
+      $('turn').textContent = gameOver ? '本局完成' : teams.every(team => team.result !== 'pending') ? '兩隊已完成本題' : '兩隊同時作答';
+      $('timer').textContent = formatTime(seconds);
+    }
+    function newQuestion(message = '在自己的答案卡找出正確答案；找不到時，按答案卡下方的跳過按鈕。') {
+      clearTimeout(nextQuestionTimer);
+      const pairs = [];
+      for (let a=1; a<=10; a++) for (let b=1; b<=10; b++) pairs.push({a,b,key:`${a}×${b}`,answer:a*b});
+      let freshPairs = pairs.filter(pair => !usedQuestions.has(pair.key));
+      if (!freshPairs.length) { usedQuestions.clear(); freshPairs = pairs; }
+      const picked = freshPairs[Math.floor(Math.random() * freshPairs.length)];
+      usedQuestions.add(picked.key); question = picked; questionCount++;
+      teams.forEach(team => { team.result = 'pending'; });
+      $('equation').textContent = `${question.a} × ${question.b}`;
+      $('instruction').textContent = message;
+      $('round').textContent = `第 ${questionCount} 題`;
+      $('bingoAlert').textContent = '';
+      updateChrome();
+    }
+    function bingoLines(card) {
+      const lines = [];
+      for (let row=0; row<size; row++) lines.push(Array.from({length:size}, (_,col) => row*size+col));
+      for (let col=0; col<size; col++) lines.push(Array.from({length:size}, (_,row) => row*size+col));
+      lines.push(Array.from({length:size}, (_,i) => i));
+      lines.push(Array.from({length:size}, (_,i) => i*size + (size-1-i)));
+      return lines.filter(line => line.every(position => card[position].marked)).length;
+    }
+    function chooseAnswer(index, position, button) {
+      if (gameOver || teams[index].result !== 'pending' || teams[index].card[position].marked) return;
+      const item = teams[index].card[position];
+      if (item.value !== question.answer) {
+        button.classList.add('wrong');
+        $('instruction').textContent = `這不是答案，再想想！${question.a} × ${question.b} = ?`;
+        setTimeout(() => button.classList.remove('wrong'), 450);
+        return;
+      }
+      item.marked = true;
+      teams[index].score += 10;
+      teams[index].result = 'correct';
+      const lines = bingoLines(teams[index].card);
+      if (lines) { $('bingoAlert').textContent = `🎉 賓果！${teams[index].name} 連成 ${lines} 條線！`; updateChrome(); setTimeout(() => finish(index), 1100); return; }
+      $('instruction').textContent = `${teams[index].name} 答對！等待另一隊完成本題。`;
+      updateChrome();
+      completeQuestion();
+    }
+    function skipQuestion(index) {
+      if (gameOver || teams[index].result !== 'pending') return;
+      teams[index].result = 'skipped';
+      $('instruction').textContent = `${teams[index].name} 已跳過此題。等待另一隊完成本題。`;
+      updateChrome();
+      completeQuestion();
+    }
+    function completeQuestion() {
+      if (!teams.every(team => team.result !== 'pending')) return;
+      $('instruction').textContent = '兩隊都已完成本題，下一題即將出現。';
+      updateChrome();
+      nextQuestionTimer = setTimeout(() => { if (!gameOver) newQuestion(); }, 900);
+    }
+    function finish(winnerIndex) {
+      if (gameOver) return;
+      gameOver = true; clearInterval(timer); clearTimeout(nextQuestionTimer); updateChrome();
+      $('game').classList.add('hidden'); $('finish').classList.remove('hidden');
+      const high = Math.max(...teams.map(t => t.score)); const leaders = teams.filter(t => t.score === high);
+      $('winner').textContent = winnerIndex !== undefined ? `${teams[winnerIndex].name} 賓果勝出！` : leaders.length === 2 ? '平手！兩隊都很厲害。' : `${leaders[0].name} 分數最高！`;
+      $('finalScore').textContent = `${teams[0].name}：${teams[0].score} 分　｜　${teams[1].name}：${teams[1].score} 分`;
+    }
+    function updateFullscreenButton() {
+      const active = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+      $('fullscreen').textContent = active ? '↙ 離開全螢幕' : '⛶ 全螢幕';
+      $('fullscreen').setAttribute('aria-pressed', String(active));
+    }
+    async function toggleFullscreen() {
+      const active = document.fullscreenElement || document.webkitFullscreenElement;
+      const action = active ? (document.exitFullscreen || document.webkitExitFullscreen) : (document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+      if (!action) return;
+      try { await action.call(active ? document : document.documentElement); } catch (_) { /* Browser denied full-screen mode. */ }
+    }
+    function start() {
+      size = Number($('cardSize').value); seconds = Number($('duration').value); usedQuestions = new Set(); questionCount = 0; gameOver = false;
+      teams = [{name:$('team1Name').value.trim() || '第一隊', score:0, card:makeCard(), result:'pending'}, {name:$('team2Name').value.trim() || '第二隊', score:0, card:makeCard(), result:'pending'}];
+      $('team0Title').textContent = `${teams[0].name}答案卡`; $('team1Title').textContent = `${teams[1].name}答案卡`;
+      $('setup').classList.add('hidden'); $('finish').classList.add('hidden'); $('game').classList.remove('hidden');
+      clearInterval(timer); newQuestion(); timer = setInterval(() => { seconds--; updateChrome(); if (seconds <= 0) finish(); }, 1000);
+    }
+    $('start').addEventListener('click', start); $('playAgain').addEventListener('click', () => { $('finish').classList.add('hidden'); $('setup').classList.remove('hidden'); });
+    $('restart').addEventListener('click', () => { if (confirm('確定重新開始本局？')) start(); }); $('end').addEventListener('click', () => finish());
+    $('skip0').addEventListener('click', () => skipQuestion(0)); $('skip1').addEventListener('click', () => skipQuestion(1));
+    $('fullscreen').addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', updateFullscreenButton); document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+  </script>
+</body>
+</html>
