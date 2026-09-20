@@ -132,6 +132,9 @@
       </nav>
       <section class="wb-popover" id="wbBackgroundMenu" hidden aria-label="白板背景"><p>選擇背景</p><button type="button" data-wb-background="paper"><i class="bg-sample paper"></i>純白</button><button type="button" data-wb-background="chalk"><i class="bg-sample chalk"></i>仿課室黑板</button></section>
       <section class="wb-popover wb-boards-menu" id="wbBoardsMenu" hidden aria-label="白板列表"><div class="wb-popover-title"><p>我的白板</p><button type="button" data-wb-action="new-board">＋ 建立新白板</button></div><div id="wbBoardsList"></div></section>
+      <section class="wb-clear-confirm" id="wbClearConfirm" hidden role="alertdialog" aria-modal="true" aria-labelledby="wbClearConfirmTitle" aria-describedby="wbClearConfirmText">
+        <div class="wb-clear-confirm-card"><p>清除確認</p><h2 id="wbClearConfirmTitle">清除所有筆跡？</h2><span id="wbClearConfirmText">此動作可使用「復原」還原。</span><div><button type="button" data-wb-action="cancel-clear">取消</button><button type="button" class="wb-confirm-danger" data-wb-action="confirm-clear">清除</button></div></div>
+      </section>
     </section>
 
     <section class="bingo-game" id="bingoGame" hidden aria-label="數學賓果大激鬥">

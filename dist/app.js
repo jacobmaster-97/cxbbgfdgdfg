@@ -530,7 +530,18 @@ function setWhiteboardBackground(background) {
 }
 
 function clearWhiteboard() {
-  if (!window.confirm(`要清除這張${state.whiteboard.mode === "homework" ? "功課紙" : "白板"}的所有筆跡嗎？`)) return;
+  const name = state.whiteboard.mode === "homework" ? "功課紙" : "白板";
+  $("#wbClearConfirmTitle").textContent = `清除這張${name}的所有筆跡？`;
+  $("#wbClearConfirm").hidden = false;
+  $("[data-wb-action='confirm-clear']").focus();
+}
+
+function cancelClearWhiteboard() {
+  $("#wbClearConfirm").hidden = true;
+}
+
+function confirmClearWhiteboard() {
+  cancelClearWhiteboard();
   rememberWhiteboardState();
   state.whiteboard.context.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
   scheduleWhiteboardSave();
@@ -1158,6 +1169,8 @@ document.addEventListener("click", event => {
     case "undo": undoWhiteboard(); break;
     case "redo": redoWhiteboard(); break;
     case "clear": clearWhiteboard(); break;
+    case "cancel-clear": cancelClearWhiteboard(); break;
+    case "confirm-clear": confirmClearWhiteboard(); break;
     case "export": exportWhiteboardPNG(); break;
     case "background": $("#wbBackgroundMenu").hidden = !$("#wbBackgroundMenu").hidden; $("#wbBoardsMenu").hidden = true; break;
     case "boards": renderWhiteboardBoards(); $("#wbBoardsMenu").hidden = !$("#wbBoardsMenu").hidden; $("#wbBackgroundMenu").hidden = true; break;
@@ -1201,6 +1214,10 @@ document.addEventListener("keydown", event => {
   if (!whiteboard.hidden) {
     if (event.key === "Escape") {
       event.preventDefault();
+      if (!$("#wbClearConfirm").hidden) {
+        cancelClearWhiteboard();
+        return;
+      }
       closeWhiteboard();
     }
     return;
