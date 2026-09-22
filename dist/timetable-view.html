@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#5d6de2" />
+    <title>上課時間表</title>
+    <link rel="stylesheet" href="./timetable-view.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header><div><p>教師課堂工具</p><h1>上課時間表</h1><span id="termName"></span></div><a href="./index.html">返回首頁</a></header>
+      <section class="toolbar"><label>班別 <select id="classSelect" aria-label="選擇班別"></select></label><span>檢閱模式</span></section>
+      <section id="timetable" aria-live="polite"></section>
+    </main>
+    <script src="./timetable-view.js"></script>
+  </body>
+</html>

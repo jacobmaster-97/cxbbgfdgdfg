@@ -24,6 +24,7 @@
       <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M4 9a12 12 0 0 1 16 0M7 12a8 8 0 0 1 10 0M10 15a4 4 0 0 1 4 0"/><circle cx="12" cy="19" r="1"/></symbol>
       <symbol id="i-fullscreen" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></symbol>
       <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+      <symbol id="i-apps" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
     </svg>
 
     <main class="desktop" id="desktop">
@@ -39,6 +40,7 @@
           <p id="heroDate">星期二，10月28日</p>
         </div>
         <div class="display-actions">
+          <button class="library-button" id="appLibraryButton" type="button" aria-expanded="false" aria-controls="appSidebar"><svg><use href="#i-apps"/></svg><span>工具庫</span></button>
           <button class="fullscreen-button" id="fullscreenButton" type="button" aria-pressed="false" aria-label="進入全螢幕"><svg><use href="#i-fullscreen"/></svg><span>全螢幕</span></button>
           <button class="quiet-button" id="focusButton" type="button">專注模式</button>
         </div>
@@ -46,15 +48,11 @@
 
       <section class="widgets" aria-label="課堂小工具">
         <article class="widget schedule-widget">
-          <div class="widget-heading">
+          <div class="widget-heading schedule-heading">
             <div><span class="mini-icon calendar-icon">▦</span><h2>上課時間表</h2></div>
-            <button class="text-button" data-app="上課時間表">查看全部 <span>›</span></button>
+            <div class="schedule-heading-actions"><label>班別<select id="dashboardClassSelect" aria-label="選擇班別"></select></label><button class="text-button" data-app="上課時間表檢閱">查看全部 <span>›</span></button></div>
           </div>
-          <div class="lesson-list" role="list">
-            <button class="lesson active" type="button"><time>10:00</time><span>數學 · 3A</span><b>進行中</b></button>
-            <button class="lesson" type="button"><time>11:00</time><span>英文 · 3A</span><b>下一節</b></button>
-            <button class="lesson" type="button"><time>12:00</time><span>常識 · 3B</span><b></b></button>
-          </div>
+          <div class="lesson-list" id="dashboardSchedule" role="list"></div>
         </article>
 
         <article class="widget calendar-widget">
@@ -90,6 +88,12 @@
         <button class="dock-item" data-app="設定"><span class="dock-slate"><svg><use href="#i-settings"/></svg></span><small>設定</small></button>
       </nav>
     </main>
+
+    <aside class="app-sidebar" id="appSidebar" hidden aria-label="工具庫">
+      <header><div><p>教師課堂工具</p><h2>工具庫</h2></div><button type="button" id="closeAppSidebar" aria-label="關閉工具庫"><svg><use href="#i-close"/></svg></button></header>
+      <p class="sidebar-intro">開啟已安裝工具，或將不常用的工具從底部捷徑列移除。</p>
+      <div class="app-library-list" id="appLibraryList"></div>
+    </aside>
 
     <dialog class="app-dialog" id="appDialog">
       <div class="dialog-shell">

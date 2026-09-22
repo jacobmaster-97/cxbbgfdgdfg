@@ -5,6 +5,7 @@ const state = {
   announce: localStorage.getItem("announce") !== "off",
   monthOffset: 0,
   score: 28,
+  ui: { theme: "sunset", scale: 100, dark: false, reduceMotion: false },
   toastTimer: null,
   exam: {
     schedule: null,
@@ -45,6 +46,24 @@ const state = {
 };
 
 const EXAM_SETTINGS_KEY = "teacher-dashboard-exam-settings-v1";
+const UI_PREFERENCES_KEY = "teacher-dashboard-ui-preferences-v1";
+const HIDDEN_DOCK_APPS_KEY = "teacher-dashboard-hidden-dock-apps-v1";
+const UI_THEMES = {
+  sunset: ["#ff875f", "#8658d7"],
+  ocean: ["#23a6d5", "#5b4ad9"],
+  forest: ["#28a078", "#365ca8"],
+};
+const APP_LIBRARY = {
+  "班別管理": "建立班別與學生名單（準備中）",
+  "上課時間表": "循環周課表、校曆與公眾假期",
+  "加分": "快速記錄課堂加分",
+  "計時工具": "考試投影與獨立倒數",
+  "電子白板": "書寫、繪圖與課堂計時",
+  "功課紙": "方格與橫線功課紙",
+  "數學賓果": "分隊數學賓果遊戲",
+  "乘法寶藏": "乘法分隊挑戰遊戲",
+  "設定": "主題、顯示比例與動畫",
+};
 const WHITEBOARD_STORAGE_KEYS = {
   board: "teacher-dashboard-whiteboards-v1",
   homework: "teacher-dashboard-homework-papers-v1",
@@ -54,6 +73,72 @@ const HOMEWORK_BACKGROUNDS = {
   gridWide: { label: "大方格功課紙", asset: "./assets/homework-grid-wide.png", ratio: "1118 / 1407" },
   lined: { label: "橫線功課紙", asset: "./assets/homework-lined.png", ratio: "1121 / 1403" },
 };
+
+const TIMETABLE_STORAGE_KEY = "teacher-dashboard-timetable-v1";
+const TIMETABLE_PUBLIC_HOLIDAYS = [
+  ["2026-09-26", "中秋節翌日"], ["2026-10-01", "國慶日"], ["2026-10-19", "重陽節翌日"], ["2026-12-25", "聖誕節"], ["2026-12-26", "聖誕節後第一個周日"], ["2027-01-01", "一月一日"], ["2027-02-06", "農曆年初一"], ["2027-02-08", "農曆年初三"], ["2027-02-09", "農曆年初四"], ["2027-03-26", "耶穌受難節"], ["2027-03-27", "耶穌受難節翌日"], ["2027-03-29", "復活節星期一"], ["2027-04-05", "清明節"], ["2027-05-01", "勞動節"], ["2027-05-13", "佛誕"], ["2027-06-09", "端午節"], ["2027-07-01", "香港特別行政區成立紀念日"],
+].map(([start, name]) => ({ start, end: "", note: `公眾假期：${name}`, source: "公眾假期 JSON" }));
+const TIMETABLE_DEFAULT = {
+  setup: { termName: "2026–27 第一學期", cycleStart: "2026-09-07", cycleEnd: "2027-07-09", cycleLength: 6 },
+  classes: ["3A", "3B"], selectedClass: "3A", exceptions: [], publicHolidays: [],
+  morningPeriods: [{ name: "第 1 節", start: "08:25", end: "09:05" }, { name: "第 2 節", start: "09:05", end: "09:45" }, { name: "第 3 節", start: "10:00", end: "10:40" }, { name: "第 4 節", start: "10:40", end: "11:20" }, { name: "第 5 節", start: "11:35", end: "12:15" }, { name: "第 6 節", start: "12:15", end: "12:55" }],
+  afternoonPeriods: [{ name: "第 7 節", start: "14:05", end: "14:45" }, { name: "第 8 節", start: "14:45", end: "15:25" }],
+  lessons: { "3A": { "morning-1-0": { subject: "中文", room: "201" }, "morning-1-2": { subject: "數學", room: "201" }, "morning-2-1": { subject: "英文", room: "201" }, "afternoon-0-0": { subject: "常識", room: "201" } }, "3B": {} },
+};
+
+function cloneTimetableDefault() { return JSON.parse(JSON.stringify(TIMETABLE_DEFAULT)); }
+function loadTimetable() {
+  try {
+    const prototype = JSON.parse(localStorage.getItem("cycle-timetable-prototype-v4") || "{}");
+    const dashboard = JSON.parse(localStorage.getItem(TIMETABLE_STORAGE_KEY) || "{}");
+    const saved = prototype.setup ? { ...prototype, exceptions: prototype.excludedRanges || [] } : dashboard;
+    const result = { ...cloneTimetableDefault(), ...saved, setup: { ...TIMETABLE_DEFAULT.setup, ...(saved.setup || {}) }, exceptions: saved.exceptions || [], publicHolidays: saved.publicHolidays || [], lessons: { ...TIMETABLE_DEFAULT.lessons, ...(saved.lessons || {}) } };
+    result.selectedClass = result.classes.includes(result.selectedClass) ? result.selectedClass : result.classes[0];
+    return result;
+  } catch { return cloneTimetableDefault(); }
+}
+let timetable = loadTimetable();
+let timetableTab = "today";
+function saveTimetable() { localStorage.setItem(TIMETABLE_STORAGE_KEY, JSON.stringify(timetable)); }
+function timetableDateValue(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
+function timetableLocalDate(value) { return new Date(`${value}T12:00:00`); }
+function timetableWeekday(date) { return date.getDay() !== 0 && date.getDay() !== 6; }
+function timetableCycleLabel(day) { return `Day ${String.fromCharCode(64 + Number(day))}`; }
+function timetableHoliday(date) {
+  const value = timetableDateValue(date); const all = new Map(TIMETABLE_PUBLIC_HOLIDAYS.map(entry => [entry.start, entry]));
+  (timetable.publicHolidays || []).forEach(entry => all.set(entry.start, entry));
+  return [...all.values()].find(entry => value >= entry.start && value <= (entry.end || entry.start));
+}
+function timetableException(date) { const value = timetableDateValue(date); return timetable.exceptions.find(entry => entry.start && value >= entry.start && value <= (entry.end || entry.start)); }
+function timetableSchoolDay(date) {
+  const target = new Date(date); target.setHours(12, 0, 0, 0);
+  const { cycleStart, cycleEnd, cycleLength } = timetable.setup; const start = timetableLocalDate(cycleStart); const end = timetableLocalDate(cycleEnd);
+  if (!cycleStart || !cycleEnd || target < start || target > end) return { active: false, reason: "循環周外" };
+  const closed = timetableException(target) || timetableHoliday(target);
+  if (closed) return { active: false, reason: closed.note || "不適用日", closed };
+  if (!timetableWeekday(target)) return { active: false, reason: "星期六日" };
+  let count = 0; const cursor = new Date(start);
+  while (cursor <= target) { if (timetableWeekday(cursor) && !timetableException(cursor) && !timetableHoliday(cursor)) count += 1; cursor.setDate(cursor.getDate() + 1); }
+  return { active: true, day: ((count - 1) % Number(cycleLength)) + 1 };
+}
+function timetableLessonsFor(date, className = timetable.selectedClass) {
+  const info = timetableSchoolDay(date); if (!info.active) return [];
+  const lessons = timetable.lessons[className] || []; const weekday = date.getDay() - 1;
+  const morning = timetable.morningPeriods.map((period, index) => ({ period, entry: lessons[`morning-${info.day}-${index}`] })).filter(item => item.entry?.subject);
+  const afternoon = weekday >= 0 && weekday < 5 ? timetable.afternoonPeriods.map((period, index) => ({ period, entry: lessons[`afternoon-${weekday}-${index}`] })).filter(item => item.entry?.subject) : [];
+  return [...morning, ...afternoon].sort((a, b) => a.period.start.localeCompare(b.period.start));
+}
+function timetableEscape(value) { return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char])); }
+function renderDashboardSchedule() {
+  const box = $("#dashboardSchedule"); if (!box) return;
+  const classSelect = $("#dashboardClassSelect");
+  if (classSelect) classSelect.innerHTML = timetable.classes.map(name => `<option value="${timetableEscape(name)}" ${name === timetable.selectedClass ? "selected" : ""}>${timetableEscape(name)}</option>`).join("");
+  const now = new Date(); const info = timetableSchoolDay(now); const lessons = timetableLessonsFor(now);
+  if (!info.active) { box.innerHTML = `<div class="lesson active"><time>—</time><span>${timetableEscape(info.reason)}</span><b>今天停課</b></div>`; return; }
+  if (!lessons.length) { box.innerHTML = `<div class="lesson active"><time>${timetableCycleLabel(info.day)}</time><span>${timetableEscape(timetable.selectedClass)} 尚未安排課堂</span><b></b></div>`; return; }
+  const nowTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  box.innerHTML = lessons.map((item, index) => { const status = nowTime >= item.period.start && nowTime < item.period.end ? "進行中" : nowTime < item.period.start && !lessons.slice(0, index).some(previous => nowTime < previous.period.start) ? "下一節" : ""; return `<div class="lesson ${status === "進行中" ? "active" : ""}"><time>${item.period.start}</time><span>${timetableEscape(item.entry.subject)} · ${timetableEscape(timetable.selectedClass)}</span><b>${status}</b></div>`; }).join("");
+}
 
 const heroTime = $("#heroTime");
 const statusTime = $("#statusTime");
@@ -76,6 +161,57 @@ const wbCanvasWrap = $("#wbCanvasWrap");
 const wbCanvas = $("#wbCanvas");
 const bingoGame = $("#bingoGame");
 const treasureGame = $("#treasureGame");
+const appSidebar = $("#appSidebar");
+const appLibraryButton = $("#appLibraryButton");
+const appLibraryList = $("#appLibraryList");
+
+function savedUIPreferences() {
+  try {
+    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, ...JSON.parse(localStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
+  } catch {
+    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false };
+  }
+}
+
+function saveUIPreferences() {
+  localStorage.setItem(UI_PREFERENCES_KEY, JSON.stringify(state.ui));
+}
+
+function applyUIPreferences() {
+  const [first, second] = UI_THEMES[state.ui.theme] || UI_THEMES.sunset;
+  document.documentElement.style.setProperty("--scale", state.ui.scale / 100);
+  $("#desktop").style.background = `radial-gradient(circle at 82% 13%, ${second} 0 18%, transparent 42%), linear-gradient(135deg, ${first}, ${second})`;
+  document.body.classList.toggle("is-dark", state.ui.dark);
+  document.body.classList.toggle("reduce-motion", state.ui.reduceMotion);
+  $("meta[name='theme-color']")?.setAttribute("content", state.ui.dark ? "#172044" : second);
+}
+
+function hiddenDockApps() {
+  try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_DOCK_APPS_KEY) || "[]")); } catch { return new Set(); }
+}
+
+function applyDockVisibility() {
+  const hidden = hiddenDockApps();
+  $$(".dock-item").forEach(item => { item.hidden = hidden.has(item.dataset.app); });
+}
+
+function renderAppLibrary() {
+  const hidden = hiddenDockApps();
+  appLibraryList.innerHTML = Object.entries(APP_LIBRARY).map(([name, description]) => `<article class="library-item"><div><h3>${name}</h3><p>${description}</p></div><div class="library-actions"><button type="button" data-library-open="${name}">開啟</button><button type="button" data-library-toggle="${name}">${hidden.has(name) ? "加入捷徑" : "移除捷徑"}</button></div></article>`).join("");
+}
+
+function openAppLibrary() {
+  renderAppLibrary();
+  appSidebar.hidden = false;
+  document.body.classList.add("sidebar-open");
+  appLibraryButton.setAttribute("aria-expanded", "true");
+}
+
+function closeAppLibrary() {
+  appSidebar.hidden = true;
+  document.body.classList.remove("sidebar-open");
+  appLibraryButton.setAttribute("aria-expanded", "false");
+}
 
 function pad(value) { return String(value).padStart(2, "0"); }
 
@@ -137,12 +273,57 @@ function buildCalendar() {
   let next = 1;
   while (cells.length < 42) cells.push({ day: next++, muted: true });
   const grid = $("#calendarGrid");
-  grid.innerHTML = cells.map(({ day, muted }) => `<button type="button" class="${muted ? "is-muted" : ""} ${!muted && day === now.getDate() && month === now.getMonth() && year === now.getFullYear() ? "is-today" : ""}" data-day="${day}" ${muted ? "aria-label=\"相鄰月份\"" : ""}>${day}</button>`).join("");
+  grid.innerHTML = cells.map(({ day, muted }) => {
+    const date = new Date(year, month, day, 12); const info = muted ? null : timetableSchoolDay(date);
+    const statusClass = info?.active ? "is-school-day" : info?.closed ? "is-calendar-off" : "";
+    const label = info?.active ? timetableCycleLabel(info.day) : info?.closed ? info.reason.replace("公眾假期：", "") : "";
+    return `<button type="button" class="${muted ? "is-muted" : ""} ${statusClass} ${!muted && day === now.getDate() && month === now.getMonth() && year === now.getFullYear() ? "is-today" : ""}" data-day="${day}" data-calendar-date="${timetableDateValue(date)}" title="${timetableEscape(label)}" ${muted ? "aria-label=\"相鄰月份\"" : ""}>${day}${label ? `<small>${timetableEscape(label)}</small>` : ""}</button>`;
+  }).join("");
   $$("button:not(.is-muted)", grid).forEach(button => button.addEventListener("click", () => {
     $$("button", grid).forEach(item => item.classList.remove("is-today"));
     button.classList.add("is-today");
-    $("#selectedEvent").innerHTML = `<span></span> ${button.dataset.day}日：尚未加入事項`;
+    const info = timetableSchoolDay(timetableLocalDate(button.dataset.calendarDate));
+    $("#selectedEvent").innerHTML = `<span></span> ${button.dataset.day}日：${timetableEscape(info.active ? timetableCycleLabel(info.day) : info.reason)}`;
   }));
+}
+
+function timetableTabButton(value, label) { return `<button type="button" class="tt-tab ${timetableTab === value ? "is-active" : ""}" data-tt-action="tab" data-tt-tab="${value}">${label}</button>`; }
+function timetableTodayView() {
+  const now = new Date(); const info = timetableSchoolDay(now); const lessons = timetableLessonsFor(now);
+  return `<section class="timetable-tool"><div class="tt-intro"><p>今日課堂</p><h3>${timetableEscape(timetable.setup.termName)}</h3><span>${timetableEscape(timetable.selectedClass)} · ${timetableEscape(info.active ? timetableCycleLabel(info.day) : info.reason)}</span></div><div class="tt-today-list">${info.active ? (lessons.length ? lessons.map(item => `<article><time>${item.period.start}–${item.period.end}</time><div><strong>${timetableEscape(item.entry.subject)}</strong><small>${timetableEscape(item.entry.room || "")}</small></div></article>`).join("") : "<p>今天尚未安排課堂。</p>") : `<p>${timetableEscape(info.reason)}，不會顯示班別課堂。</p>`}</div></section>`;
+}
+function timetableSetupView() {
+  const exceptions = timetable.exceptions.length ? timetable.exceptions.map((entry, index) => `<div class="tt-exception" data-tt-exception="${index}"><input type="date" data-tt-field="start" value="${entry.start}"><input type="date" data-tt-field="end" value="${entry.end || ""}" aria-label="結束日期"><input data-tt-field="note" value="${timetableEscape(entry.note || "")}" placeholder="備註"><button type="button" data-tt-action="remove-exception">移除</button></div>`).join("") : "<p class=\"tt-empty\">尚未加入不適用日期。</p>";
+  return `<section class="timetable-tool"><div class="tt-form-grid"><label>學期名稱<input id="ttTermName" value="${timetableEscape(timetable.setup.termName)}"></label><label>循環周開始日<input id="ttCycleStart" type="date" value="${timetable.setup.cycleStart}"></label><label>循環周結束日<input id="ttCycleEnd" type="date" value="${timetable.setup.cycleEnd}"></label><label>循環日數<select id="ttCycleLength">${[5, 6].map(value => `<option value="${value}" ${Number(timetable.setup.cycleLength) === value ? "selected" : ""}>${value} 日</option>`).join("")}</select></label></div><div class="tt-section-heading"><div><h3>不適用日期</h3><p>填寫開始日；結束日留空即為單日。</p></div><button type="button" class="secondary-action" data-tt-action="add-exception">加入日期</button></div><div id="ttExceptionList">${exceptions}</div><div class="demo-actions"><button type="button" class="primary-action" data-tt-action="save-setup">儲存校曆設定</button></div></section>`;
+}
+function timetableScheduleView() {
+  const classOptions = timetable.classes.map(name => `<option value="${timetableEscape(name)}" ${name === timetable.selectedClass ? "selected" : ""}>${timetableEscape(name)}</option>`).join("");
+  const cell = (section, day, period) => { const entry = timetable.lessons[timetable.selectedClass]?.[`${section}-${day}-${period}`] || {}; return `<td><input data-tt-slot="${section}-${day}-${period}" data-tt-slot-field="subject" placeholder="科目" value="${timetableEscape(entry.subject || "")}"><input data-tt-slot-field="room" placeholder="課室／備註" value="${timetableEscape(entry.room || "")}"></td>`; };
+  const morningRows = timetable.morningPeriods.map((period, periodIndex) => `<tr><th>${timetableEscape(period.name)}<small>${period.start}–${period.end}</small></th>${Array.from({ length: Number(timetable.setup.cycleLength) }, (_, day) => cell("morning", day + 1, periodIndex)).join("")}</tr>`).join("");
+  const afternoonRows = timetable.afternoonPeriods.map((period, periodIndex) => `<tr><th>${timetableEscape(period.name)}<small>${period.start}–${period.end}</small></th>${[0, 1, 2, 3, 4].map(day => cell("afternoon", day, periodIndex)).join("")}</tr>`).join("");
+  return `<section class="timetable-tool"><div class="tt-class-row"><label>班別<select id="ttClassSelect">${classOptions}</select></label><button type="button" class="secondary-action" data-tt-action="add-class">新增班別</button><button type="button" class="primary-action" data-tt-action="save-lessons">儲存課表</button></div><h3>上午：循環日課表</h3><div class="tt-table-wrap"><table class="tt-grid"><thead><tr><th>節次</th>${Array.from({ length: Number(timetable.setup.cycleLength) }, (_, day) => `<th>${timetableCycleLabel(day + 1)}</th>`).join("")}</tr></thead><tbody>${morningRows}</tbody></table></div><h3>下午：星期課表</h3><div class="tt-table-wrap"><table class="tt-grid"><thead><tr><th>節次</th>${["星期一", "星期二", "星期三", "星期四", "星期五"].map(day => `<th>${day}</th>`).join("")}</tr></thead><tbody>${afternoonRows}</tbody></table></div></section>`;
+}
+function timetableImportView() { return `<section class="timetable-tool"><div class="tt-import-card"><h3>時間表照片／PDF 匯入</h3><p>上載來源後，將辨認結果貼入 JSON，系統會按班別、上午 Day A–F 及下午星期欄位匯入。</p><label class="secondary-action">選擇圖片或 PDF<input id="ttSourceInput" type="file" accept="image/*,application/pdf" hidden></label><span id="ttSourceStatus" class="tt-source-status"></span><label>辨認結果（JSON）<textarea id="ttRecognition" rows="8" placeholder='[{"section":"morning","day":"Day A","period":"第 1 節","subject":"中文","room":"201"}]'></textarea></label><div class="demo-actions"><button type="button" class="primary-action" data-tt-action="apply-recognition">確認匯入</button></div></div></section>`; }
+function renderTimetableTool() {
+  const views = { today: timetableTodayView, setup: timetableSetupView, schedule: timetableScheduleView, import: timetableImportView };
+  dialogBody.innerHTML = `<div class="tt-tabs">${timetableTabButton("today", "今日課堂")}${timetableTabButton("setup", "校曆資料")}${timetableTabButton("schedule", "班別時間表")}${timetableTabButton("import", "時間表匯入")}</div>${views[timetableTab]()}`;
+}
+function saveTimetableSetup() {
+  timetable.setup = { termName: $("#ttTermName").value.trim() || "未命名學期", cycleStart: $("#ttCycleStart").value, cycleEnd: $("#ttCycleEnd").value, cycleLength: Number($("#ttCycleLength").value) };
+  timetable.exceptions = $$("[data-tt-exception]").map(row => ({ start: $("[data-tt-field=\"start\"]", row).value, end: $("[data-tt-field=\"end\"]", row).value, note: $("[data-tt-field=\"note\"]", row).value.trim(), source: "手動" })).filter(entry => entry.start && (!entry.end || entry.end >= entry.start));
+  saveTimetable(); renderTimetableTool(); buildCalendar(); renderDashboardSchedule(); showToast("校曆設定已儲存");
+}
+function saveTimetableLessons() {
+  const className = $("#ttClassSelect").value; timetable.lessons[className] = {};
+  $$('[data-tt-slot]').forEach(input => { if (input.dataset.ttSlotField !== "subject") return; const key = input.dataset.ttSlot; const room = $(`[data-tt-slot="${key}"][data-tt-slot-field="room"]`).value.trim(); const subject = input.value.trim(); if (subject || room) timetable.lessons[className][key] = { subject, room }; });
+  saveTimetable(); renderDashboardSchedule(); showToast(`${className} 課表已儲存`);
+}
+function applyTimetableRecognition() {
+  try {
+    const rows = JSON.parse($("#ttRecognition").value); if (!Array.isArray(rows)) throw new Error(); const className = timetable.selectedClass; timetable.lessons[className] ||= {};
+    let count = 0; rows.forEach(row => { const afternoon = /afternoon|week|下午|星期/i.test(String(row.section || row.day || "")); const period = Number(String(row.period || "").match(/\d+/)?.[0]) - (afternoon ? 7 : 1); const dayText = String(row.day || row.weekday || ""); const cycleLetter = dayText.match(/DAY\s*([A-F])/i)?.[1] || dayText.match(/^\s*([A-F])\s*$/i)?.[1]; const day = afternoon ? ["一", "二", "三", "四", "五"].findIndex(value => dayText.includes(value)) : (cycleLetter ? cycleLetter.toUpperCase().charCodeAt(0) - 64 : NaN); if (period < 0 || !Number.isInteger(day) || day < 0 || !row.subject) return; timetable.lessons[className][`${afternoon ? "afternoon" : "morning"}-${day}-${period}`] = { subject: String(row.subject), room: String(row.room || "") }; count += 1; });
+    if (!count) throw new Error(); saveTimetable(); renderDashboardSchedule(); showToast(`已匯入 ${count} 節課`);
+  } catch { showToast("無法讀取辨認結果，請核對 JSON 欄位"); }
 }
 
 const descriptions = {
@@ -977,6 +1158,18 @@ function submitExamSettings() {
 }
 
 function openApp(name) {
+  if (name === "班別管理") {
+    window.location.href = "./class-management.html";
+    return;
+  }
+  if (name === "上課時間表檢閱") {
+    window.location.href = "./timetable-view.html";
+    return;
+  }
+  if (name === "上課時間表") {
+    window.location.href = "./timetable-prototype/index.html";
+    return;
+  }
   if (name === "數學賓果") {
     openBingoGame();
     return;
@@ -999,7 +1192,7 @@ function openApp(name) {
   } else if (name === "計時工具") {
     renderTimerHub();
   } else if (name === "設定") {
-    dialogBody.innerHTML = `<div class="demo-card"><h3>顯示設定</h3><div class="settings-row"><span>介面色彩</span><div class="swatches"><button class="swatch" data-theme="sunset" aria-label="日落色"></button><button class="swatch" data-theme="ocean" aria-label="海洋色"></button><button class="swatch" data-theme="forest" aria-label="森林色"></button></div></div><label class="settings-row"><span>介面大小</span><input id="scaleSlider" type="range" min="90" max="115" value="100" /></label><div class="settings-row"><span>減少動畫</span><button class="secondary-action" data-demo-action="motion">切換</button></div></div>`;
+    dialogBody.innerHTML = `<div class="demo-card"><h3>顯示設定</h3><div class="settings-row"><span>介面色彩</span><div class="swatches"><button class="swatch ${state.ui.theme === "sunset" ? "is-active" : ""}" data-theme="sunset" aria-label="日落色" aria-pressed="${state.ui.theme === "sunset"}"></button><button class="swatch ${state.ui.theme === "ocean" ? "is-active" : ""}" data-theme="ocean" aria-label="海洋色" aria-pressed="${state.ui.theme === "ocean"}"></button><button class="swatch ${state.ui.theme === "forest" ? "is-active" : ""}" data-theme="forest" aria-label="森林色" aria-pressed="${state.ui.theme === "forest"}"></button></div></div><label class="settings-row"><span>介面大小</span><input id="scaleSlider" type="range" min="90" max="115" value="${state.ui.scale}" /></label><div class="settings-row"><span>深色模式</span><button class="secondary-action" data-ui-action="dark">${state.ui.dark ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>減少動畫</span><button class="secondary-action" data-ui-action="motion">${state.ui.reduceMotion ? "已開啟" : "已關閉"}</button></div></div>`;
   } else {
     dialogBody.innerHTML = genericDemo(name);
   }
@@ -1076,6 +1269,17 @@ function updateFullscreenButton() {
 document.addEventListener("click", (event) => {
   const launcher = event.target.closest("[data-app]");
   if (launcher) openApp(launcher.dataset.app);
+  const timetableAction = event.target.closest("[data-tt-action]");
+  if (timetableAction) {
+    const action = timetableAction.dataset.ttAction;
+    if (action === "tab") { timetableTab = timetableAction.dataset.ttTab; renderTimetableTool(); }
+    if (action === "add-exception") { timetable.exceptions.push({ start: "", end: "", note: "", source: "手動" }); renderTimetableTool(); }
+    if (action === "remove-exception") { timetable.exceptions.splice(Number(timetableAction.closest("[data-tt-exception]").dataset.ttException), 1); renderTimetableTool(); }
+    if (action === "save-setup") saveTimetableSetup();
+    if (action === "save-lessons") saveTimetableLessons();
+    if (action === "add-class") { const name = prompt("新班別名稱，例如：4A"); if (name?.trim() && !timetable.classes.includes(name.trim())) { timetable.classes.push(name.trim()); timetable.lessons[name.trim()] = {}; timetable.selectedClass = name.trim(); saveTimetable(); renderTimetableTool(); } }
+    if (action === "apply-recognition") applyTimetableRecognition();
+  }
   const lesson = event.target.closest(".lesson");
   if (lesson) {
     $$(".lesson").forEach(item => item.classList.remove("active"));
@@ -1140,16 +1344,41 @@ document.addEventListener("click", (event) => {
   const demoAction = event.target.closest("[data-demo-action]");
   if (demoAction?.dataset.demoAction === "close") closeApp();
   if (demoAction?.dataset.demoAction === "start") showToast(`${dialogTitle.textContent}示範已啟動`);
-  if (demoAction?.dataset.demoAction === "motion") {
-    document.body.classList.toggle("reduce-motion");
-    showToast("動畫設定已切換");
+  const uiAction = event.target.closest("[data-ui-action]");
+  if (uiAction?.dataset.uiAction === "dark") {
+    state.ui.dark = !state.ui.dark;
+    saveUIPreferences();
+    applyUIPreferences();
+    openApp("設定");
+  }
+  if (uiAction?.dataset.uiAction === "motion") {
+    state.ui.reduceMotion = !state.ui.reduceMotion;
+    saveUIPreferences();
+    applyUIPreferences();
+    openApp("設定");
+    showToast(state.ui.reduceMotion ? "減少動畫已開啟" : "減少動畫已關閉");
   }
   const swatch = event.target.closest(".swatch");
   if (swatch) {
-    const themes = { sunset: ["#ff875f", "#8658d7"], ocean: ["#23a6d5", "#5b4ad9"], forest: ["#28a078", "#365ca8"] };
-    const [first, second] = themes[swatch.dataset.theme];
-    $("#desktop").style.background = `radial-gradient(circle at 82% 13%, ${second} 0 18%, transparent 42%), linear-gradient(135deg, ${first}, ${second})`;
+    state.ui.theme = swatch.dataset.theme;
+    saveUIPreferences();
+    applyUIPreferences();
+    openApp("設定");
     showToast("主題色彩已更新");
+  }
+  const libraryOpen = event.target.closest("[data-library-open]");
+  if (libraryOpen) {
+    closeAppLibrary();
+    openApp(libraryOpen.dataset.libraryOpen);
+  }
+  const libraryToggle = event.target.closest("[data-library-toggle]");
+  if (libraryToggle) {
+    const hidden = hiddenDockApps();
+    const name = libraryToggle.dataset.libraryToggle;
+    if (hidden.has(name)) hidden.delete(name); else hidden.add(name);
+    localStorage.setItem(HIDDEN_DOCK_APPS_KEY, JSON.stringify([...hidden]));
+    applyDockVisibility();
+    renderAppLibrary();
   }
 });
 
@@ -1197,6 +1426,8 @@ dialog.addEventListener("submit", event => {
 $("#closeDialog").addEventListener("click", closeApp);
 $("#closeBingoGame").addEventListener("click", closeApp);
 $("#closeTreasureGame").addEventListener("click", closeApp);
+appLibraryButton.addEventListener("click", () => appSidebar.hidden ? openAppLibrary() : closeAppLibrary());
+$("#closeAppSidebar").addEventListener("click", closeAppLibrary);
 dialog.addEventListener("click", event => { if (event.target === dialog) closeApp(); });
 const homeButton = $("[data-action=\"home\"]");
 if (homeButton) homeButton.addEventListener("click", closeApp);
@@ -1211,6 +1442,11 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 document.addEventListener("keydown", event => {
+  if (!appSidebar.hidden && event.key === "Escape") {
+    event.preventDefault();
+    closeAppLibrary();
+    return;
+  }
   if (!whiteboard.hidden) {
     if (event.key === "Escape") {
       event.preventDefault();
@@ -1252,12 +1488,41 @@ $("#focusButton").addEventListener("click", event => {
 $("#prevMonth").addEventListener("click", () => { state.monthOffset--; buildCalendar(); });
 $("#nextMonth").addEventListener("click", () => { state.monthOffset++; buildCalendar(); });
 dialog.addEventListener("input", event => {
-  if (event.target.id === "scaleSlider") document.documentElement.style.setProperty("--scale", event.target.value / 100);
+  if (event.target.id === "scaleSlider") {
+    state.ui.scale = Number(event.target.value);
+    saveUIPreferences();
+    applyUIPreferences();
+  }
   if (event.target.id === "standaloneMinutes" || event.target.id === "standaloneSeconds") resetStandaloneTimer();
+});
+dialog.addEventListener("change", async event => {
+  if (event.target.id === "ttClassSelect") { timetable.selectedClass = event.target.value; saveTimetable(); renderTimetableTool(); renderDashboardSchedule(); }
+  if (event.target.id === "ttSourceInput") { $("#ttSourceStatus").textContent = event.target.files[0] ? `已選擇：${event.target.files[0].name}` : ""; }
+  if (event.target.id === "ttPublicHolidayInput") {
+    try {
+      const payload = JSON.parse((await event.target.files[0].text()).replace(/^\uFEFF/, "")); const events = payload.vcalendar?.flatMap(calendar => calendar.vevent || []) || [];
+      const imported = events.flatMap(event => { const raw = Array.isArray(event.dtstart) ? event.dtstart[0] : event.dtstart; const value = String(raw || ""); return /^\d{8}$/.test(value) ? [{ start: `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`, end: "", note: `公眾假期：${event.summary || "未命名"}`, source: "公眾假期 JSON" }] : []; });
+      timetable.publicHolidays = imported; saveTimetable(); buildCalendar(); renderDashboardSchedule(); showToast(`已套用 ${imported.length} 個公眾假期`);
+    } catch { showToast("無法讀取公眾假期 JSON"); }
+  }
+});
+document.addEventListener("change", event => {
+  if (event.target.id !== "dashboardClassSelect") return;
+  timetable.selectedClass = event.target.value;
+  try {
+    const prototype = JSON.parse(localStorage.getItem("cycle-timetable-prototype-v4") || "{}");
+    if (prototype.setup) { prototype.selectedClass = timetable.selectedClass; localStorage.setItem("cycle-timetable-prototype-v4", JSON.stringify(prototype)); }
+    else saveTimetable();
+  } catch { saveTimetable(); }
+  renderDashboardSchedule();
 });
 
 updateAnnouncement();
+state.ui = savedUIPreferences();
+applyUIPreferences();
+applyDockVisibility();
 updateFullscreenButton();
 buildCalendar();
+renderDashboardSchedule();
 updateClock();
 setInterval(updateClock, 1000);

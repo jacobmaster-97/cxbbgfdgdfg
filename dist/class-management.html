@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="教師課堂工具班別管理" />
+    <title>班別管理｜教師課堂工具</title>
+    <link rel="stylesheet" href="./class-management.css" />
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"><span></span><span></span><span></span></div>
+    <main class="management-window" aria-label="班別管理">
+      <header class="window-header">
+        <div class="app-mark">▦</div><div><h1>班別管理</h1><p>班別會與上課時間表共用</p></div>
+        <div class="header-actions"><button class="text-control" type="button" data-action="reset-demo">還原示例</button><a class="close-window" href="./index.html" aria-label="返回工具首頁">×</a></div>
+      </header>
+      <div class="window-content">
+        <aside class="class-panel" aria-label="班別列表">
+          <div class="section-heading"><div class="section-icon pink">♧</div><div><h2>班級列表</h2><p id="classTotal">共 0 個班級</p></div></div>
+          <div id="classList" class="class-list"></div>
+          <form id="quickClassForm" class="quick-class-form"><input name="className" maxlength="30" required placeholder="輸入班級名稱，例如：4A" /><button class="primary" type="submit">確認建立</button></form>
+        </aside>
+        <section class="student-panel" aria-live="polite">
+          <div id="emptyState" class="empty-state" hidden><div class="empty-icon">▦</div><h2>先建立一個班別</h2><p>在左側輸入班別名稱，即可開始建立學生名單。</p></div>
+          <div id="classWorkspace">
+            <header class="students-heading"><div class="title-row"><div class="section-icon blue">♧</div><div><h2 id="classTitle">— 的學生</h2><p id="classMeta">共 0 人</p></div></div><div class="heading-actions"><button id="bulkToggle" class="quiet" type="button" data-action="toggle-bulk">批量選擇</button><button class="quiet" type="button" data-action="open-import">⇧ 匯入名單</button><button class="primary" type="button" data-action="add-student">♧ 添加學生</button></div></header>
+            <div id="bulkBar" class="bulk-bar" hidden><strong id="bulkInfo">已選擇 0 人</strong><button class="quiet" type="button" data-action="select-all">全選</button><button class="transfer" type="button" data-action="open-transfer">轉班</button><button class="danger" type="button" data-action="delete-selected">刪除</button><button class="text-control" type="button" data-action="toggle-bulk">退出</button></div>
+            <div class="student-tools"><label class="search"><span>⌕</span><input id="studentSearch" type="search" placeholder="搜尋姓名、英文名、座號或性別" /></label><span id="studentCount" class="student-count">0 位學生</span></div>
+            <div id="studentGrid" class="student-grid"></div><div id="noResults" class="no-results" hidden>找不到相符的學生。</div>
+          </div>
+        </section>
+      </div>
+      <footer class="window-footer"><p>學生資料只保存在這部裝置。<button class="inline-link" type="button" data-action="export-all">匯出全部備份</button>，或 <label class="inline-link">匯入 JSON 備份<input id="backupInput" type="file" accept="application/json,.json" /></label>。</p></footer>
+    </main>
+    <dialog id="editorDialog"><form id="editorForm"><div class="dialog-heading"><div><p id="dialogEyebrow" class="eyebrow">資料</p><h2 id="dialogTitle">—</h2></div><button class="close-dialog" type="button" data-action="close-dialog" aria-label="關閉">×</button></div><div id="dialogContent"></div><div class="dialog-actions"><button class="quiet" type="button" data-action="close-dialog">取消</button><button id="dialogSubmit" class="primary" type="submit">儲存</button></div></form></dialog>
+    <div id="toast" class="toast" role="status"></div>
+    <script src="./class-management.js"></script>
+  </body>
+</html>
