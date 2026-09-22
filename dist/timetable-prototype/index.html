@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="教師循環周時間表原型" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%231f5f72'/%3E%3Cpath d='M16 18h32v30H16zM16 28h32M27 18v30M38 18v30' stroke='white' stroke-width='4' fill='none'/%3E%3C/svg%3E" />
+    <title>循環時間表原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div><p class="eyebrow">教師工具 · 獨立測試版</p><h1>循環時間表</h1></div>
+      <div class="topbar-actions"><button class="home-link" type="button" data-action="return-home" data-home-url="../index.html">返回工具首頁</button><div class="today-chip" id="todayChip">讀取中</div></div>
+    </header>
+
+    <main>
+      <section class="overview" aria-label="今日課堂">
+        <article class="today-card"><p>今天的循環日</p><strong id="todayCycle">—</strong><span id="todayNote">請先設定學期起始日</span></article>
+        <article class="today-card wide"><div class="card-heading"><div><p>今日班別安排</p><strong id="todayClassTitle">尚未安排</strong></div><button class="quiet" type="button" data-action="jump-timetable">編輯時間表</button></div><div id="todayLessons" class="today-lessons"></div></article>
+      </section>
+
+      <nav class="tabs" aria-label="時間表功能">
+        <button class="active" type="button" data-tab="setup">1．校曆資料</button>
+        <button type="button" data-tab="calendar-import">2．校曆匯入</button>
+        <button type="button" data-tab="timetable">3．班別時間表</button>
+        <button type="button" data-tab="import">4．時間表匯入</button>
+      </nav>
+
+      <section class="panel" id="setupPanel">
+        <div class="panel-heading"><div><p class="eyebrow dark">校曆資料</p><h2>循環周與不適用日期</h2></div><button class="primary" type="button" data-action="save-setup">儲存校曆資料</button></div>
+        <div class="setup-grid">
+          <label>學年名稱<input id="termName" type="text" maxlength="40" /></label>
+          <label>循環周開始日<input id="cycleStart" type="date" /></label>
+          <label>循環周結束日<input id="cycleEnd" type="date" /></label>
+          <label>循環日數<select id="cycleLength"><option value="2">2 日（Day A–B）</option><option value="5">5 日（Day A–E）</option><option value="6">6 日（Day A–F）</option><option value="10">10 日（Day A–J）</option></select></label>
+        </div>
+        <p class="hint">循環日期間的星期一至五會自動輪轉 Day A–F。加入「不適用日期」或公眾假期後，該日不會上課，也不會推進 Day 順序。</p>
+        <div class="calendar-layout">
+          <section><div class="section-row"><h3>不適用日期</h3><button class="quiet" type="button" data-action="add-calendar-entry">手動加入日期</button></div><div id="calendarEntryList" class="exception-list"></div></section>
+          <section class="calendar-box"><div class="section-row"><button class="icon" type="button" data-action="previous-month" aria-label="上月">‹</button><h3 id="calendarTitle"></h3><button class="icon" type="button" data-action="next-month" aria-label="下月">›</button></div><div class="week-labels"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div id="calendarGrid" class="calendar-grid"></div><p class="legend"><i class="swatch teach"></i>循環周上課日 <i class="swatch off"></i>不適用日／公眾假期</p></section>
+        </div>
+      </section>
+
+      <section class="panel" id="calendarImportPanel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow dark">逐日核對</p><h2>校曆 PDF／圖片匯入</h2></div><button class="primary" type="button" data-action="apply-calendar-import">確認匯入校曆</button></div>
+        <div class="import-intro"><label class="upload-zone">選擇校曆來源<input id="calendarSourceInput" type="file" accept="image/*,application/pdf,application/json,.json" capture="environment" /><span id="calendarSourceLabel">拍攝、上載圖片、PDF 或公眾假期 JSON</span></label><div><h3>校曆不適用日期</h3><p>公眾假期 JSON 會直接讀取日期和名稱，只在右側校曆顯示並停止循環。PDF 或圖片的辨認結果則會集中顯示於核對表。</p><button class="quiet" type="button" data-action="load-calendar-sample">載入示例校曆結果</button></div></div>
+        <div id="calendarSourcePreview" class="source-preview" hidden></div>
+        <label class="json-label">辨認結果（JSON）<textarea id="calendarRecognitionJson" rows="7" spellcheck="false" placeholder='[{"date":"2026-10-01","note":"國慶日","confidence":0.98}]'></textarea></label>
+        <div class="action-row import-actions"><button class="quiet" type="button" data-action="preview-calendar-import">建立逐日核對預覽</button></div>
+        <div id="calendarImportMessage" class="import-message" role="status"></div><div id="calendarImportPreview" class="import-preview"></div>
+      </section>
+
+      <section class="panel" id="timetablePanel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow dark">班別資料</p><h2>循環時間表</h2></div><div class="action-row"><label class="inline-label">班別<select id="classSelect"></select></label><button class="quiet" type="button" data-action="add-class">新增班別</button><button class="primary" type="button" data-action="save-timetable">儲存時間表</button></div></div>
+        <div class="schedule-editor"><section class="period-editor"><div class="section-row"><h3>上午節次</h3><button class="quiet" type="button" data-action="add-morning-period">＋ 新增節次</button></div><div id="morningPeriodList"></div></section><section class="period-editor"><div class="section-row"><h3>下午節次</h3><button class="quiet" type="button" data-action="add-afternoon-period">＋ 新增節次</button></div><div id="afternoonPeriodList"></div></section></div>
+        <section class="block-editor"><div class="section-row"><div><h3>固定時段</h3><p>小息、午膳、放學和課後活動會跨越整個時間表欄位。</p></div><button class="quiet" type="button" data-action="add-block">＋ 新增固定時段</button></div><div id="blockList"></div></section>
+        <div id="timetableSections"></div>
+        <p class="hint">上午依 Day A–F 顯示，下午依星期一至五顯示。每格只需填寫該班的科目及課室／備註；留白即代表空堂。</p>
+      </section>
+
+      <section class="panel" id="importPanel" hidden>
+        <div class="panel-heading"><div><p class="eyebrow dark">核對後才寫入</p><h2>照片辨認結果匯入</h2></div><button class="primary" type="button" data-action="apply-import">確認匯入</button></div>
+        <div class="import-intro"><label class="upload-zone">選擇時間表來源<input id="sourceInput" type="file" accept="image/*,application/pdf" capture="environment" /><span id="sourceLabel">拍攝、上載圖片或 PDF</span></label><div><h3>原型測試方式</h3><p>相片和 PDF 都會先成為辨認來源；多頁 PDF 的每一頁結果會合併到同一份核對草稿。請載入示例結果或貼上辨認服務回傳的 JSON。</p><button class="quiet" type="button" data-action="load-sample">載入示例辨認結果</button></div></div>
+        <div id="sourcePreview" class="source-preview" hidden></div>
+        <label class="json-label">辨認結果（JSON）<textarea id="recognitionJson" rows="7" spellcheck="false" placeholder='[{"section":"cycle","day":"Day A","period":"第 1 節","subject":"中文","room":"201"}]'></textarea></label>
+        <div class="action-row import-actions"><label class="inline-label">匯入至<select id="importClassSelect"></select></label><button class="quiet" type="button" data-action="preview-import">建立核對預覽</button></div>
+        <div id="importMessage" class="import-message" role="status"></div>
+        <div id="importPreview" class="import-preview"></div>
+      </section>
+    </main>
+    <template id="calendarEntryTemplate"><article class="exception calendar-entry"><label>由<input type="date" data-field="start" /></label><label>至（可留空）<input type="date" data-field="end" /></label><label class="calendar-note">備註<input type="text" maxlength="60" data-field="note" placeholder="例如：學校假期／國慶日" /></label><button class="remove" type="button" data-action="remove-calendar-entry">移除</button></article></template>
+    <script src="./app.js"></script>
+  </body>
+</html>
