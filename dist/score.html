@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>課堂加分／減分｜教師課堂工具</title>
+  <link rel="stylesheet" href="./score.css" />
+</head>
+<body>
+  <main class="score-app">
+    <header class="topbar">
+      <div><p class="eyebrow">教師課堂工具</p><h1>課堂加分／減分</h1><p class="subtitle">選擇學生，再記錄表現</p></div>
+      <div class="header-links"><a href="./class-management.html">管理班別</a><a class="home-link" href="./index.html">返回工具首頁</a></div>
+    </header>
+
+    <section class="toolbar" aria-label="學生篩選">
+      <label class="field">班別<select id="classSelect" aria-label="選擇班別"></select></label>
+      <label class="search-field"><span aria-hidden="true">⌕</span><input id="studentSearch" type="search" placeholder="搜尋姓名或座號" aria-label="搜尋學生" /></label>
+      <button id="multiButton" class="quiet-button" type="button" aria-pressed="false">多選學生</button>
+    </section>
+
+    <section class="summary" aria-live="polite"><div><span>目前班別</span><strong id="className">—</strong></div><div><span>學生人數</span><strong id="studentCount">0</strong></div><div><span>班別總分</span><strong id="classTotal">0</strong></div><div><span>已長成植物</span><strong id="classPlants">0 棵</strong></div><button id="rulesButton" class="outline-button" type="button">管理加分／減分項目</button></section>
+
+    <div id="emptyState" class="empty-state" hidden></div>
+    <section id="studentGrid" class="student-grid" aria-label="學生名單"></section>
+
+  </main>
+
+  <div id="selectionBar" class="selection-bar" hidden><strong id="selectionCount">已選 0 位學生</strong><div><button id="clearSelection" type="button">清除</button><button id="applySelection" class="primary-button" type="button">為所選學生加分／減分</button></div></div>
+
+  <dialog id="scoreDialog" class="modal score-modal" aria-labelledby="scoreDialogTitle"><div class="dialog-head"><div><p class="eyebrow">課堂表現</p><h2 id="scoreDialogTitle">為誰加分／減分</h2><p id="recipientSummary" class="recipient-summary" hidden></p></div><button class="icon-button" type="button" data-close="scoreDialog" aria-label="關閉">×</button></div><div class="dialog-content"><div class="score-tabs" role="tablist" aria-label="項目類別"><button id="positiveTab" type="button" data-kind="positive" role="tab" aria-selected="true">加分項</button><button id="negativeTab" type="button" data-kind="negative" role="tab" aria-selected="false">減分項</button></div><div id="ruleList" class="rule-list"></div><form id="customScoreForm" class="custom-score-form" hidden><strong id="customScoreTitle">自訂加分（只適用於今次）</strong><p id="customScoreHelp">可沿用現有原因，單獨調整今次分值；預設項目不會更改。</p><label>原因<select id="customScoreReason"></select></label><label id="customScoreNameField" hidden>新原因<input id="customScoreName" type="text" maxlength="40" placeholder="輸入今次原因" /></label><label>今次分值<input id="customScorePoints" type="number" min="1" max="99" step="1" required /></label><p id="customScorePreview" class="custom-score-preview" aria-live="polite"></p><div class="custom-score-actions"><button id="cancelCustomScore" type="button">取消</button><button id="submitCustomScore" class="primary-button" type="submit">確認加分</button></div></form><div id="deductionConfirm" class="deduction-confirm" hidden><strong>確認減分</strong><p id="deductionMessage"></p><div><button type="button" id="cancelDeduction">取消</button><button type="button" id="confirmDeduction" class="danger-button">確認減分</button></div></div></div></dialog>
+
+  <dialog id="rulesDialog" class="modal rules-modal" aria-labelledby="rulesDialogTitle"><div class="dialog-head"><div><p class="eyebrow">教師設定</p><h2 id="rulesDialogTitle">管理加分／減分項目</h2></div><button class="icon-button" type="button" data-close="rulesDialog" aria-label="關閉">×</button></div><div class="dialog-content"><p class="helper">修改項目不會改動已記錄的分數和原因。</p><form id="ruleForm"><input id="ruleId" type="hidden" /><label>項目名稱<input id="ruleName" maxlength="40" required placeholder="例如：主動回答" /></label><label>類別<select id="ruleKind"><option value="positive">加分</option><option value="negative">減分</option></select></label><label>分值<input id="rulePoints" type="number" min="1" max="99" step="1" value="1" required /></label><button class="primary-button" type="submit" id="saveRule">新增項目</button><button id="cancelRuleEdit" type="button" hidden>取消編輯</button></form><div id="manageRuleList" class="manage-rule-list"></div></div></dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="./score.js"></script>
+</body>
+</html>

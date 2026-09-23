@@ -4,8 +4,7 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const state = {
   announce: localStorage.getItem("announce") !== "off",
   monthOffset: 0,
-  score: 28,
-  ui: { theme: "sunset", scale: 100, dark: false, reduceMotion: false },
+  ui: { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24" },
   toastTimer: null,
   exam: {
     schedule: null,
@@ -47,6 +46,7 @@ const state = {
 
 const EXAM_SETTINGS_KEY = "teacher-dashboard-exam-settings-v1";
 const UI_PREFERENCES_KEY = "teacher-dashboard-ui-preferences-v1";
+let pendingSettingsImport = null;
 const HIDDEN_DOCK_APPS_KEY = "teacher-dashboard-hidden-dock-apps-v1";
 const UI_THEMES = {
   sunset: ["#ff875f", "#8658d7"],
@@ -54,9 +54,9 @@ const UI_THEMES = {
   forest: ["#28a078", "#365ca8"],
 };
 const APP_LIBRARY = {
-  "班別管理": "建立班別與學生名單（準備中）",
+  "班別管理": "建立班別與學生名單",
   "上課時間表": "循環周課表、校曆與公眾假期",
-  "加分": "快速記錄課堂加分",
+  "加分": "按學生記錄課堂加分與減分",
   "計時工具": "考試投影與獨立倒數",
   "電子白板": "書寫、繪圖與課堂計時",
   "功課紙": "方格與橫線功課紙",
@@ -167,9 +167,9 @@ const appLibraryList = $("#appLibraryList");
 
 function savedUIPreferences() {
   try {
-    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, ...JSON.parse(localStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
+    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", ...JSON.parse(localStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
   } catch {
-    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false };
+    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24" };
   }
 }
 
@@ -179,10 +179,12 @@ function saveUIPreferences() {
 
 function applyUIPreferences() {
   const [first, second] = UI_THEMES[state.ui.theme] || UI_THEMES.sunset;
-  document.documentElement.style.setProperty("--scale", state.ui.scale / 100);
+  document.documentElement.style.setProperty("--scale", (state.ui.scale / 100) * (state.ui.largeText ? 1.15 : 1));
   $("#desktop").style.background = `radial-gradient(circle at 82% 13%, ${second} 0 18%, transparent 42%), linear-gradient(135deg, ${first}, ${second})`;
   document.body.classList.toggle("is-dark", state.ui.dark);
   document.body.classList.toggle("reduce-motion", state.ui.reduceMotion);
+  document.body.classList.toggle("high-contrast", state.ui.highContrast);
+  document.body.classList.toggle("clock-12", state.ui.clockFormat === "12");
   $("meta[name='theme-color']")?.setAttribute("content", state.ui.dark ? "#172044" : second);
 }
 
@@ -214,10 +216,15 @@ function closeAppLibrary() {
 }
 
 function pad(value) { return String(value).padStart(2, "0"); }
+function displayClock(date, seconds = false) {
+  const hour = state.ui.clockFormat === "12" ? (date.getHours() % 12 || 12) : date.getHours();
+  const time = `${pad(hour)}:${pad(date.getMinutes())}${seconds ? `:${pad(date.getSeconds())}` : ""}`;
+  return state.ui.clockFormat === "12" ? `${date.getHours() < 12 ? "上午" : "下午"} ${time}` : time;
+}
 
 function updateClock() {
   const now = new Date();
-  const display = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const display = displayClock(now);
   heroTime.textContent = display;
   statusTime.textContent = display;
   digitalTime.textContent = display;
@@ -327,8 +334,7 @@ function applyTimetableRecognition() {
 }
 
 const descriptions = {
-  "班別管理": ["管理班別與學生名單", "這是班別管理的示範入口。完整版本可加入出席、分組與學生資料。"],
-  "加分": ["課堂即時加分", "點按下方按鈕可示範全班累積分數。"],
+  "班別管理": ["管理班別與學生名單", "建立並管理班別及學生資料。"],
   "計時工具": ["計時工具", "可選擇考試時間顯示或獨立倒數計時。"],
   "電子白板": ["電子白板", "此處將提供筆、擦膠、顏色與連結計時器等白板工具。"],
   "功課紙": ["空白功課紙", "選擇範本後，可快速加入班別、姓名及日期簿頭。"],
@@ -886,7 +892,7 @@ function formatFullDate(date) {
 }
 
 function formatClock(date) {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  return displayClock(date, true);
 }
 
 function parseLocalDateTime(dateValue, timeValue) {
@@ -1157,6 +1163,42 @@ function submitExamSettings() {
   renderExamDisplay(settings);
 }
 
+function settingsStatusMarkup() {
+  const info = SettingsData.status();
+  return `<p class="settings-help">資料只儲存在此瀏覽器；清除瀏覽器網站資料會令資料消失。</p><div class="settings-stats"><span>班別 <b>${info.classCount}</b></span><span>學生 <b>${info.studentCount}</b></span><span>時間表班別 <b>${info.timetableCount}</b></span><span>加分紀錄 <b>${info.scoreCount}</b></span><span>白板 <b>${info.boardCount}</b></span><span>已用約 <b>${(info.bytes / 1024).toFixed(1)} KB</b></span></div>`;
+}
+
+function renderSettings() {
+  const info = SettingsData.status();
+  dialogBody.innerHTML = `<div class="settings-panel">
+    <section class="demo-card"><h3>外觀</h3><div class="settings-row"><span>介面色彩</span><div class="swatches"><button class="swatch ${state.ui.theme === "sunset" ? "is-active" : ""}" data-theme="sunset" aria-label="日落色" aria-pressed="${state.ui.theme === "sunset"}"></button><button class="swatch ${state.ui.theme === "ocean" ? "is-active" : ""}" data-theme="ocean" aria-label="海洋色" aria-pressed="${state.ui.theme === "ocean"}"></button><button class="swatch ${state.ui.theme === "forest" ? "is-active" : ""}" data-theme="forest" aria-label="森林色" aria-pressed="${state.ui.theme === "forest"}"></button></div></div><label class="settings-row"><span>介面大小</span><input id="scaleSlider" type="range" min="90" max="115" value="${state.ui.scale}" /></label><div class="settings-row"><span>深色模式</span><button class="secondary-action" data-ui-action="dark" aria-pressed="${state.ui.dark}">${state.ui.dark ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>減少動畫</span><button class="secondary-action" data-ui-action="motion" aria-pressed="${state.ui.reduceMotion}">${state.ui.reduceMotion ? "已開啟" : "已關閉"}</button></div></section>
+    <section class="demo-card"><h3>輔助模式</h3><div class="settings-row"><span>大字模式</span><button class="secondary-action" data-ui-action="largeText" aria-pressed="${state.ui.largeText}">${state.ui.largeText ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>高對比模式</span><button class="secondary-action" data-ui-action="highContrast" aria-pressed="${state.ui.highContrast}">${state.ui.highContrast ? "已開啟" : "已關閉"}</button></div><label class="settings-row"><span>時鐘顯示格式</span><select id="clockFormat"><option value="24" ${state.ui.clockFormat === "24" ? "selected" : ""}>24 小時</option><option value="12" ${state.ui.clockFormat === "12" ? "selected" : ""}>12 小時（上午／下午）</option></select></label></section>
+    <section class="demo-card"><h3>資料備份與還原</h3><p class="settings-help">按類別下載 JSON 備份。匯入時會先顯示檔案內容及影響範圍。</p><div class="settings-export-grid">${Object.entries(SettingsData.categories).map(([key, name]) => `<button type="button" class="secondary-action" data-settings-export="${key}">匯出${name}</button>`).join("")}</div><label class="settings-file-label">選擇備份檔案以預覽<input id="settingsImportFile" type="file" accept=".json,application/json"></label><div id="settingsImportPreview" aria-live="polite"></div></section>
+    <section class="demo-card"><h3>資料管理</h3><div id="settingsStorageStatus">${settingsStatusMarkup()}</div><div class="settings-clear-list"><div><span>白板資料 <small>${info.boardCount} 張</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="whiteboard" ${info.boardCount ? "" : "disabled"}>清除白板</button></div><div><span>遊戲進度 <small>遊戲沒有本機紀錄；可重設目前進行中的兩個遊戲</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="games">重設遊戲</button></div><div><span>加分紀錄 <small>${info.scoreCount} 筆；保留自訂規則</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="scores" ${info.scoreCount ? "" : "disabled"}>清除紀錄</button></div></div></section>
+  </div>`;
+}
+
+function downloadSettingsBackup(category) {
+  const payload = SettingsData.exportPayload(category);
+  const name = SettingsData.categories[category];
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `教師工具-${name}-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast(`已匯出${name}備份`);
+}
+
+function showSettingsImportPreview(payload) {
+  const current = SettingsData.exportPayload(payload.category);
+  const categoryName = SettingsData.categories[payload.category];
+  const effect = payload.category === "classes" ? "相同班別會更新名稱；其他班別和學生保留。" : payload.category === "students" ? "相同班別的學生名單會被替換；其他班別保留。" : payload.category === "timetable" ? "檔案所包含的時間表儲存版本會被替換。" : "現有加分紀錄、規則及植物進度會被替換。";
+  const escape = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&#39;" })[char]);
+  $("#settingsImportPreview").innerHTML = `<div class="settings-preview"><h4>匯入預覽：${categoryName}</h4><p>備份日期：${escape(new Date(payload.exportedAt).toLocaleString("zh-HK"))}</p><p>檔案內容：${escape(SettingsData.summary(payload.category, payload.data))}</p><p>目前資料：${escape(SettingsData.summary(current.category, current.data))}</p><p><strong>套用後：</strong>${effect}</p><div class="demo-actions"><button type="button" class="primary-action" data-settings-import="confirm">確認匯入</button><button type="button" class="secondary-action" data-settings-import="cancel">取消</button></div></div>`;
+}
+
 function openApp(name) {
   if (name === "班別管理") {
     window.location.href = "./class-management.html";
@@ -1186,13 +1228,14 @@ function openApp(name) {
     openWhiteboard("homework");
     return;
   }
-  dialogTitle.textContent = name;
+  dialogTitle.textContent = name === "加分" ? "課堂加分／減分" : name;
   if (name === "加分") {
-    dialogBody.innerHTML = `<div class="demo-card"><div class="score-preview"><div><h3>3A 全班積分</h3><p>今日課堂表現</p></div><strong id="scoreValue">${state.score}</strong></div><div class="demo-actions"><button class="primary-action" data-score="1">+1 分</button><button class="primary-action" data-score="2">+2 分</button><button class="secondary-action" data-demo-action="close">完成</button></div></div>`;
+    dialogBody.innerHTML = '<iframe class="score-frame" src="./score.html?embed=1" title="課堂加分／減分"></iframe>';
   } else if (name === "計時工具") {
     renderTimerHub();
   } else if (name === "設定") {
-    dialogBody.innerHTML = `<div class="demo-card"><h3>顯示設定</h3><div class="settings-row"><span>介面色彩</span><div class="swatches"><button class="swatch ${state.ui.theme === "sunset" ? "is-active" : ""}" data-theme="sunset" aria-label="日落色" aria-pressed="${state.ui.theme === "sunset"}"></button><button class="swatch ${state.ui.theme === "ocean" ? "is-active" : ""}" data-theme="ocean" aria-label="海洋色" aria-pressed="${state.ui.theme === "ocean"}"></button><button class="swatch ${state.ui.theme === "forest" ? "is-active" : ""}" data-theme="forest" aria-label="森林色" aria-pressed="${state.ui.theme === "forest"}"></button></div></div><label class="settings-row"><span>介面大小</span><input id="scaleSlider" type="range" min="90" max="115" value="${state.ui.scale}" /></label><div class="settings-row"><span>深色模式</span><button class="secondary-action" data-ui-action="dark">${state.ui.dark ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>減少動畫</span><button class="secondary-action" data-ui-action="motion">${state.ui.reduceMotion ? "已開啟" : "已關閉"}</button></div></div>`;
+    pendingSettingsImport = null;
+    renderSettings();
   } else {
     dialogBody.innerHTML = genericDemo(name);
   }
@@ -1286,12 +1329,6 @@ document.addEventListener("click", (event) => {
     lesson.classList.add("active");
     showToast(`已選擇 ${$("time", lesson).textContent} ${$("span", lesson).textContent}`);
   }
-  const scoreButton = event.target.closest("[data-score]");
-  if (scoreButton) {
-    state.score += Number(scoreButton.dataset.score);
-    $("#scoreValue").textContent = state.score;
-    showToast(`已加 ${scoreButton.dataset.score} 分`);
-  }
   const timerAction = event.target.closest("[data-timer-action]");
   if (timerAction) {
     const { timerAction: action } = timerAction.dataset;
@@ -1357,6 +1394,47 @@ document.addEventListener("click", (event) => {
     applyUIPreferences();
     openApp("設定");
     showToast(state.ui.reduceMotion ? "減少動畫已開啟" : "減少動畫已關閉");
+  }
+  if (["largeText", "highContrast"].includes(uiAction?.dataset.uiAction)) {
+    const key = uiAction.dataset.uiAction;
+    state.ui[key] = !state.ui[key];
+    saveUIPreferences();
+    applyUIPreferences();
+    renderSettings();
+  }
+  const settingsExport = event.target.closest("[data-settings-export]");
+  if (settingsExport) downloadSettingsBackup(settingsExport.dataset.settingsExport);
+  const settingsImport = event.target.closest("[data-settings-import]");
+  if (settingsImport?.dataset.settingsImport === "cancel") {
+    pendingSettingsImport = null;
+    $("#settingsImportPreview").innerHTML = "";
+    $("#settingsImportFile").value = "";
+  }
+  if (settingsImport?.dataset.settingsImport === "confirm" && pendingSettingsImport) {
+    try {
+      const name = SettingsData.categories[pendingSettingsImport.category];
+      SettingsData.importPayload(pendingSettingsImport);
+      pendingSettingsImport = null;
+      timetable = loadTimetable();
+      buildCalendar();
+      renderDashboardSchedule();
+      renderSettings();
+      showToast(`已匯入${name}；重新開啟相關工具即可查看`);
+    } catch { showToast("匯入失敗，請檢查瀏覽器儲存空間"); }
+  }
+  const settingsClear = event.target.closest("[data-settings-clear]");
+  if (settingsClear) {
+    const category = settingsClear.dataset.settingsClear;
+    const label = category === "whiteboard" ? "所有本機白板與筆跡" : category === "games" ? "目前進行中的數學賓果與乘法寶藏進度" : "所有加減分紀錄及植物進度（自訂規則會保留）";
+    if (window.confirm(`確定要清除${label}？此動作無法復原。`)) {
+      try {
+        if (category === "games") {
+          ["#bingoFrame", "#treasureFrame"].forEach(selector => { const frame = $(selector); frame.src = frame.src; });
+        } else SettingsData.clear(category);
+        renderSettings();
+        showToast("資料已清除");
+      } catch { showToast("清除失敗，請再試一次"); }
+    }
   }
   const swatch = event.target.closest(".swatch");
   if (swatch) {
@@ -1496,6 +1574,28 @@ dialog.addEventListener("input", event => {
   if (event.target.id === "standaloneMinutes" || event.target.id === "standaloneSeconds") resetStandaloneTimer();
 });
 dialog.addEventListener("change", async event => {
+  if (event.target.id === "clockFormat") {
+    state.ui.clockFormat = event.target.value === "12" ? "12" : "24";
+    saveUIPreferences();
+    applyUIPreferences();
+    updateClock();
+    if (!examProjection.hidden) $("#projectionMainClock").textContent = formatClock(new Date());
+  }
+  if (event.target.id === "settingsImportFile") {
+    pendingSettingsImport = null;
+    const preview = $("#settingsImportPreview");
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        if (file.size > 10 * 1024 * 1024) throw new Error("檔案超過 10 MB");
+        const payload = SettingsData.validate(JSON.parse((await file.text()).replace(/^\uFEFF/, "")));
+        pendingSettingsImport = payload;
+        showSettingsImportPreview(payload);
+      } catch (error) {
+        preview.textContent = error.message || "無法讀取備份檔案";
+      }
+    }
+  }
   if (event.target.id === "ttClassSelect") { timetable.selectedClass = event.target.value; saveTimetable(); renderTimetableTool(); renderDashboardSchedule(); }
   if (event.target.id === "ttSourceInput") { $("#ttSourceStatus").textContent = event.target.files[0] ? `已選擇：${event.target.files[0].name}` : ""; }
   if (event.target.id === "ttPublicHolidayInput") {
