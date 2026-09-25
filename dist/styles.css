@@ -286,13 +286,23 @@ body.is-dark { --ink: #eef3ff; --muted: #b7c0d5; --glass: rgba(17, 27, 57, .92);
 }
 
 @media (min-width: 701px) and (max-width: 1750px) {
-  .wb-toolbar { width: min(1000px, calc(100vw - 24px)); max-width: none; flex-wrap: wrap; justify-content: center; column-gap: 10px; row-gap: 5px; padding: 7px 10px; }
-  .wb-toolbar > .wb-divider { display: none; }
-  .wb-toolbar > .wb-tool-group:last-child { flex: 0 0 100%; justify-content: center; }
-  .wb-left-actions, .wb-timer { bottom: calc(150px + env(safe-area-inset-bottom)); }
-  .wb-popover:not(.wb-boards-menu) { bottom: calc(150px + env(safe-area-inset-bottom)); }
-  .whiteboard.is-homework-paper .whiteboard-canvas-wrap { top: calc(50% - 32px); width: min(53dvh, 62vw); }
+  .wb-toolbar { width: max-content; max-width: none; flex-wrap: nowrap; gap: 6px; padding: 7px 8px; transform: translateX(-50%) scale(var(--wb-toolbar-scale, 1)); transform-origin: center bottom; }
+  .wb-toolbar > * { flex: 0 0 auto; }
+  .wb-tool-group { gap: 1px; }
+  .wb-tool { width: clamp(32px, 4.1vw, 45px); min-width: 0; padding: 6px 1px; }
+  .wb-tool b { height: 19px; font-size: clamp(.9rem, 1.5vw, 1.15rem); line-height: 19px; }
+  .wb-tool span { font-size: clamp(.52rem, .8vw, .62rem); white-space: nowrap; }
+  .wb-divider { flex: 0 0 1px; margin-inline: 1px; }
+  .wb-colors { gap: 2px; }
+  .wb-color { width: clamp(14px, 2vw, 20px); height: clamp(14px, 2vw, 20px); }
+  .wb-size { gap: 4px; padding-inline: 1px; }
+  .wb-size input { width: clamp(48px, 6vw, 70px); }
+  .whiteboard.is-homework-paper .wb-zoom-display b { min-width: 0; font-size: .7rem; }
+  .wb-left-actions, .wb-timer { bottom: calc(95px + env(safe-area-inset-bottom)); }
 }
+
+.wb-float-button, .wb-timer-summary { touch-action: none; cursor: grab; }
+.wb-float-button.is-dragging, .wb-timer-summary.is-dragging { cursor: grabbing; }
 
 @media (max-width: 700px) {
   .desktop { padding-inline: 14px; padding-bottom: 88px; }
@@ -312,7 +322,7 @@ body.is-dark { --ink: #eef3ff; --muted: #b7c0d5; --glass: rgba(17, 27, 57, .92);
   .exam-clock-stage { grid-template-columns: 1fr; justify-items: center; gap: 22px; }.exam-digital-clock { font-size: clamp(2.7rem, 14vw, 4.3rem); }
   .exam-display-footer { align-items: flex-start; flex-direction: column; }.exam-display-footer > div { justify-content: flex-start; }
   .projection-content { padding: 24px 18px; }.projection-clock-stage { grid-template-columns: 1fr; gap: 26px; }.projection-digital-clock { font-size: clamp(4.2rem, 16vw, 7.4rem); }.projection-analog-clock { width: min(68vw, 380px); min-width: 0; }.projection-controls { opacity: 1; transform: none; }
-  .wb-board-indicator { top: 11px; font-size: .74rem; }.wb-toolbar { left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); width: auto; max-width: none; justify-content: flex-start; overflow-x: auto; padding: 7px; transform: none; scrollbar-width: none; }.wb-toolbar::-webkit-scrollbar { display: none; }.wb-tool { min-width: 49px; }.wb-tool b { font-size: 1.15rem; }.wb-tool span { font-size: .6rem; }.wb-size { display: none; }.wb-divider { flex: 0 0 1px; }.wb-left-actions { bottom: calc(75px + env(safe-area-inset-bottom)); }.wb-float-button span { display: none; }.wb-float-button { padding: 12px 14px; }.wb-timer { right: 12px; bottom: calc(75px + env(safe-area-inset-bottom)); width: 172px; }.wb-boards-menu { right: 10px; bottom: 150px; }.wb-popover:not(.wb-boards-menu) { bottom: 88px; left: 10px; transform: none; }
+  .wb-board-indicator { top: 11px; font-size: .74rem; }.wb-toolbar { left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); width: auto; max-width: none; justify-content: flex-start; overflow-x: auto; padding: 7px; transform: none; scrollbar-width: none; }.wb-toolbar::-webkit-scrollbar { display: none; }.wb-tool { min-width: 49px; }.wb-tool b { font-size: 1.15rem; }.wb-tool span { font-size: .6rem; }.wb-size { display: none; }.wb-divider { flex: 0 0 1px; }.wb-left-actions { bottom: calc(90px + env(safe-area-inset-bottom)); }.wb-float-button span { display: none; }.wb-float-button { padding: 12px 14px; }.wb-timer { right: 12px; bottom: calc(90px + env(safe-area-inset-bottom)); width: 172px; }.wb-boards-menu { right: 10px; bottom: 150px; }.wb-popover:not(.wb-boards-menu) { bottom: 88px; left: 10px; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
