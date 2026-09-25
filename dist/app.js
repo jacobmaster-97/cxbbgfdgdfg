@@ -4,13 +4,19 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const state = {
   announce: localStorage.getItem("announce") !== "off",
   monthOffset: 0,
-  ui: { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24" },
+  ui: { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", examAlarmVolume: 70 },
   toastTimer: null,
   exam: {
     schedule: null,
     clockAnchor: null,
     timerId: null,
     wakeLock: null,
+    alarmContext: null,
+    alarmInterval: null,
+    alarmNodes: new Set(),
+    alarmActive: false,
+    alarmPreview: false,
+    alarmPlayed: false,
   },
   standaloneTimer: {
     seconds: 300,
@@ -170,9 +176,11 @@ const appLibraryList = $("#appLibraryList");
 
 function savedUIPreferences() {
   try {
-    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", ...JSON.parse(localStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
+    const preferences = { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", examAlarmVolume: 70, ...JSON.parse(localStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
+    preferences.examAlarmVolume = Math.max(0, Math.min(100, Number(preferences.examAlarmVolume) || 0));
+    return preferences;
   } catch {
-    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24" };
+    return { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", examAlarmVolume: 70 };
   }
 }
 
@@ -984,6 +992,81 @@ function stopExamTimer() {
   state.exam.timerId = null;
 }
 
+function primeExamAlarmAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  try {
+    const context = state.exam.alarmContext ||= new AudioContextClass();
+    context.resume().catch(() => {});
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    gain.gain.value = 0;
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + .02);
+    oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+  } catch { /* The visible end-time notice remains available if audio is blocked. */ }
+}
+
+function playExamAlarmPulse() {
+  const context = state.exam.alarmContext;
+  const volume = Math.max(0, Math.min(100, Number(state.ui.examAlarmVolume) || 0));
+  if (!state.exam.alarmActive || !context || !volume) return;
+  if (context.state !== "running") {
+    context.resume().catch(() => {});
+    return;
+  }
+  const now = context.currentTime;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = "sawtooth";
+  oscillator.frequency.setValueAtTime(720, now);
+  oscillator.frequency.setValueAtTime(880, now + .48);
+  oscillator.frequency.setValueAtTime(720, now + .96);
+  const level = Math.pow(volume / 100, 1.4) * .13;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(level, now + .05);
+  gain.gain.setValueAtTime(level, now + 1.42);
+  gain.gain.linearRampToValueAtTime(0, now + 1.52);
+  oscillator.connect(gain).connect(context.destination);
+  const node = { oscillator, gain };
+  state.exam.alarmNodes.add(node);
+  oscillator.onended = () => {
+    state.exam.alarmNodes.delete(node);
+    oscillator.disconnect();
+    gain.disconnect();
+  };
+  oscillator.start(now);
+  oscillator.stop(now + 1.54);
+}
+
+function stopExamAlarm() {
+  clearInterval(state.exam.alarmInterval);
+  state.exam.alarmInterval = null;
+  state.exam.alarmActive = false;
+  state.exam.alarmPreview = false;
+  const now = state.exam.alarmContext?.currentTime || 0;
+  for (const { oscillator, gain } of state.exam.alarmNodes) {
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(0, now, .01);
+    try { oscillator.stop(now + .05); } catch { /* The pulse may have ended already. */ }
+  }
+  const previewButton = $("[data-ui-action='preview-alarm']");
+  if (previewButton) previewButton.textContent = "試聽鬧鐘";
+}
+
+function startExamAlarm(preview = false) {
+  if (state.exam.alarmActive) stopExamAlarm();
+  state.exam.alarmActive = true;
+  state.exam.alarmPreview = preview;
+  if (state.exam.alarmContext && Number(state.ui.examAlarmVolume) > 0) {
+    playExamAlarmPulse();
+    state.exam.alarmInterval = setInterval(playExamAlarmPulse, 1700);
+  }
+  const previewButton = $("[data-ui-action='preview-alarm']");
+  if (previewButton && preview) previewButton.textContent = "停止試聽";
+}
+
 function releaseWakeLock() {
   if (state.exam.wakeLock) state.exam.wakeLock.release().catch(() => {});
   state.exam.wakeLock = null;
@@ -996,13 +1079,14 @@ async function requestExamWakeLock() {
 
 function renderExamForm(settings = savedExamSettings(), error = "") {
   stopExamTimer();
+  stopExamAlarm();
   state.exam.schedule = null;
   releaseWakeLock();
   const offset = -new Date().getTimezoneOffset() / 60;
   const zoneWarning = offset === 8 ? "" : `<p class="exam-timezone-warning">目前裝置時區為 UTC${offset >= 0 ? "+" : "−"}${Math.abs(offset)}，請先核對是否為香港時間（UTC+8）。</p>`;
   dialogBody.innerHTML = `<section class="exam-tool" aria-labelledby="examSetupTitle">
     <button type="button" class="timer-back" data-timer-hub="home">‹ 返回計時工具</button>
-    <div class="exam-intro"><div><p class="exam-kicker">考試時間顯示器</p><h3 id="examSetupTitle">設定考試時間</h3><p>顯示會讀取此裝置的本機時間，適合投影到電子白板。</p></div><strong class="exam-device-time" id="examDeviceTime">${formatClock(new Date())}</strong></div>
+    <div class="exam-intro"><div><p class="exam-kicker">考試時間顯示器</p><h3 id="examSetupTitle">設定考試時間</h3><p>顯示會讀取此裝置的本機時間；結束時鬧鐘會持續響至手動停止。</p></div><strong class="exam-device-time" id="examDeviceTime">${formatClock(new Date())}</strong></div>
     ${zoneWarning}
     <form class="exam-settings-form" id="examSettingsForm" novalidate>
       <label class="exam-field exam-field-wide"><span>科目</span><input id="examSubject" maxlength="40" autocomplete="off" placeholder="例如：中文科" value="${escapeHTML(settings.subject)}" required></label>
@@ -1152,7 +1236,9 @@ async function requestProjectionFullscreen() {
 function enterExamProjection(settings) {
   const start = parseLocalDateTime(settings.examDate, settings.startTime);
   const end = parseLocalDateTime(settings.examDate, settings.endTime);
+  stopExamAlarm();
   state.exam.schedule = { ...settings, start, end };
+  state.exam.alarmPlayed = Date.now() >= end.getTime();
   state.exam.clockAnchor = { epoch: Date.now(), monotonic: performance.now() };
   localStorage.setItem(EXAM_SETTINGS_KEY, JSON.stringify(settings));
   const minutes = Math.round((end.getTime() - start.getTime()) / 60000);
@@ -1162,6 +1248,7 @@ function enterExamProjection(settings) {
   if (dialog.open) dialog.close();
   document.body.classList.add("is-projecting");
   examProjection.hidden = false;
+  $("#projectionFinishedAlarm").hidden = true;
   stopExamTimer();
   updateExamDisplay();
   requestExamWakeLock();
@@ -1189,6 +1276,13 @@ function updateExamDisplay() {
     status.textContent = "考試進行中";
   } else {
     status.textContent = "考試結束";
+    if (!state.exam.alarmPlayed) {
+      state.exam.alarmPlayed = true;
+      const notice = $("#projectionFinishedAlarm");
+      notice.hidden = false;
+      $("[data-projection-action='stop-alarm']", notice).textContent = Number(state.ui.examAlarmVolume) > 0 ? "停止鬧鐘" : "知道了";
+      startExamAlarm();
+    }
   }
   if (Math.abs(Date.now() - timestamp) > 2500) $("#projectionAlert")?.classList.add("show");
   state.exam.timerId = setTimeout(updateExamDisplay, 250);
@@ -1197,11 +1291,13 @@ function updateExamDisplay() {
 function exitExamProjection({ openSettings = false } = {}) {
   const settings = state.exam.schedule ? { ...state.exam.schedule } : savedExamSettings();
   stopExamTimer();
+  stopExamAlarm();
   releaseWakeLock();
   state.exam.schedule = null;
   examProjection.hidden = true;
   document.body.classList.remove("is-projecting");
   $("#projectionAlert")?.classList.remove("show");
+  $("#projectionFinishedAlarm").hidden = true;
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
   if (openSettings) {
     dialogTitle.textContent = "計時工具";
@@ -1226,6 +1322,7 @@ function submitExamSettings() {
     renderExamForm(settings, error);
     return;
   }
+  primeExamAlarmAudio();
   renderExamDisplay(settings);
 }
 
@@ -1239,6 +1336,7 @@ function renderSettings() {
   dialogBody.innerHTML = `<div class="settings-panel">
     <section class="demo-card"><h3>外觀</h3><div class="settings-row"><span>介面色彩</span><div class="swatches"><button class="swatch ${state.ui.theme === "sunset" ? "is-active" : ""}" data-theme="sunset" aria-label="日落色" aria-pressed="${state.ui.theme === "sunset"}"></button><button class="swatch ${state.ui.theme === "ocean" ? "is-active" : ""}" data-theme="ocean" aria-label="海洋色" aria-pressed="${state.ui.theme === "ocean"}"></button><button class="swatch ${state.ui.theme === "forest" ? "is-active" : ""}" data-theme="forest" aria-label="森林色" aria-pressed="${state.ui.theme === "forest"}"></button></div></div><label class="settings-row"><span>介面大小</span><input id="scaleSlider" type="range" min="90" max="115" value="${state.ui.scale}" /></label><div class="settings-row"><span>深色模式</span><button class="secondary-action" data-ui-action="dark" aria-pressed="${state.ui.dark}">${state.ui.dark ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>減少動畫</span><button class="secondary-action" data-ui-action="motion" aria-pressed="${state.ui.reduceMotion}">${state.ui.reduceMotion ? "已開啟" : "已關閉"}</button></div></section>
     <section class="demo-card"><h3>輔助模式</h3><div class="settings-row"><span>大字模式</span><button class="secondary-action" data-ui-action="largeText" aria-pressed="${state.ui.largeText}">${state.ui.largeText ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>高對比模式</span><button class="secondary-action" data-ui-action="highContrast" aria-pressed="${state.ui.highContrast}">${state.ui.highContrast ? "已開啟" : "已關閉"}</button></div><label class="settings-row"><span>時鐘顯示格式</span><select id="clockFormat"><option value="24" ${state.ui.clockFormat === "24" ? "selected" : ""}>24 小時</option><option value="12" ${state.ui.clockFormat === "12" ? "selected" : ""}>12 小時（上午／下午）</option></select></label></section>
+    <section class="demo-card"><h3>聲音</h3><div class="settings-row"><label for="examAlarmVolume">考試鬧鐘音量</label><div class="settings-volume-controls"><input id="examAlarmVolume" type="range" min="0" max="100" step="5" value="${state.ui.examAlarmVolume}" aria-label="考試鬧鐘音量"><output id="examAlarmVolumeValue" for="examAlarmVolume">${state.ui.examAlarmVolume}%</output><button class="secondary-action" type="button" data-ui-action="preview-alarm">${state.exam.alarmPreview ? "停止試聽" : "試聽鬧鐘"}</button></div></div><p class="settings-help">音量 0% 為靜音；考試到時仍會顯示提示。實際聲量也受裝置音量影響。</p></section>
     <section class="demo-card"><h3>資料備份與還原</h3><p class="settings-help">按類別下載 JSON 備份。匯入時會先顯示檔案內容及影響範圍。</p><div class="settings-export-grid">${Object.entries(SettingsData.categories).map(([key, name]) => `<button type="button" class="secondary-action" data-settings-export="${key}">匯出${name}</button>`).join("")}</div><label class="settings-file-label">選擇備份檔案以預覽<input id="settingsImportFile" type="file" accept=".json,application/json"></label><div id="settingsImportPreview" aria-live="polite"></div></section>
     <section class="demo-card"><h3>資料管理</h3><div id="settingsStorageStatus">${settingsStatusMarkup()}</div><div class="settings-clear-list"><div><span>白板資料 <small>${info.boardCount} 張</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="whiteboard" ${info.boardCount ? "" : "disabled"}>清除白板</button></div><div><span>遊戲進度 <small>遊戲沒有本機紀錄；可重設目前進行中的兩個遊戲</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="games">重設遊戲</button></div><div><span>加分紀錄 <small>${info.scoreCount} 筆；保留自訂規則</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="scores" ${info.scoreCount ? "" : "disabled"}>清除紀錄</button></div></div></section>
   </div>`;
@@ -1336,6 +1434,7 @@ function closeTreasureGame() {
 }
 
 function closeApp() {
+  if (state.exam.alarmPreview) stopExamAlarm();
   closeWhiteboard();
   closeBingoGame();
   closeTreasureGame();
@@ -1439,6 +1538,10 @@ document.addEventListener("click", (event) => {
   if (projectionAction) {
     if (projectionAction.dataset.projectionAction === "exit") exitExamProjection();
     if (projectionAction.dataset.projectionAction === "edit") exitExamProjection({ openSettings: true });
+    if (projectionAction.dataset.projectionAction === "stop-alarm") {
+      stopExamAlarm();
+      $("#projectionFinishedAlarm").hidden = true;
+    }
     if (projectionAction.dataset.projectionAction === "acknowledge") {
       state.exam.clockAnchor = { epoch: Date.now(), monotonic: performance.now() };
       $("#projectionAlert")?.classList.remove("show");
@@ -1467,6 +1570,15 @@ document.addEventListener("click", (event) => {
     saveUIPreferences();
     applyUIPreferences();
     renderSettings();
+  }
+  if (uiAction?.dataset.uiAction === "preview-alarm") {
+    if (state.exam.alarmPreview) stopExamAlarm();
+    else if (Number(state.ui.examAlarmVolume) === 0) showToast("請先調高考試鬧鐘音量");
+    else {
+      primeExamAlarmAudio();
+      if (state.exam.alarmContext) startExamAlarm(true);
+      else showToast("此瀏覽器未能播放考試鬧鐘");
+    }
   }
   const settingsExport = event.target.closest("[data-settings-export]");
   if (settingsExport) downloadSettingsBackup(settingsExport.dataset.settingsExport);
@@ -1573,6 +1685,7 @@ $("#closeTreasureGame").addEventListener("click", closeApp);
 appLibraryButton.addEventListener("click", () => appSidebar.hidden ? openAppLibrary() : closeAppLibrary());
 $("#closeAppSidebar").addEventListener("click", closeAppLibrary);
 dialog.addEventListener("click", event => { if (event.target === dialog) closeApp(); });
+dialog.addEventListener("close", () => { if (state.exam.alarmPreview) stopExamAlarm(); });
 const homeButton = $("[data-action=\"home\"]");
 if (homeButton) homeButton.addEventListener("click", closeApp);
 $("#speakNow").addEventListener("click", speakTime);
@@ -1639,6 +1752,11 @@ dialog.addEventListener("input", event => {
     state.ui.scale = Number(event.target.value);
     saveUIPreferences();
     applyUIPreferences();
+  }
+  if (event.target.id === "examAlarmVolume") {
+    state.ui.examAlarmVolume = Math.max(0, Math.min(100, Number(event.target.value) || 0));
+    $("#examAlarmVolumeValue").textContent = `${state.ui.examAlarmVolume}%`;
+    saveUIPreferences();
   }
   if (event.target.id === "standaloneMinutes" || event.target.id === "standaloneSeconds") resetStandaloneTimer();
 });
