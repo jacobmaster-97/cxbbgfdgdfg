@@ -285,6 +285,15 @@ body.is-dark { --ink: #eef3ff; --muted: #b7c0d5; --glass: rgba(17, 27, 57, .92);
   .dock-item small { font-size: .64rem; }
 }
 
+@media (min-width: 701px) and (max-width: 1750px) {
+  .wb-toolbar { width: min(1000px, calc(100vw - 24px)); max-width: none; flex-wrap: wrap; justify-content: center; column-gap: 10px; row-gap: 5px; padding: 7px 10px; }
+  .wb-toolbar > .wb-divider { display: none; }
+  .wb-toolbar > .wb-tool-group:last-child { flex: 0 0 100%; justify-content: center; }
+  .wb-left-actions, .wb-timer { bottom: calc(150px + env(safe-area-inset-bottom)); }
+  .wb-popover:not(.wb-boards-menu) { bottom: calc(150px + env(safe-area-inset-bottom)); }
+  .whiteboard.is-homework-paper .whiteboard-canvas-wrap { top: calc(50% - 32px); width: min(53dvh, 62vw); }
+}
+
 @media (max-width: 700px) {
   .desktop { padding-inline: 14px; padding-bottom: 88px; }
   .welcome { align-items: flex-start; }.welcome h1 { font-size: 3.4rem; }
