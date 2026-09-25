@@ -159,6 +159,9 @@ const projectionContent = $("#projectionContent");
 const whiteboard = $("#whiteboard");
 const wbCanvasWrap = $("#wbCanvasWrap");
 const wbCanvas = $("#wbCanvas");
+const wbToolbar = $(".wb-toolbar");
+const wbLeftActions = $(".wb-left-actions");
+const wbTimer = $("#wbTimer");
 const bingoGame = $("#bingoGame");
 const treasureGame = $("#treasureGame");
 const appSidebar = $("#appSidebar");
@@ -841,6 +844,68 @@ async function enterWhiteboardFullscreen() {
   try { await document.documentElement.requestFullscreen(); } catch { /* page-filling whiteboard remains available */ }
 }
 
+function positionWhiteboardFloat(element, left, top) {
+  const toolbarTop = wbToolbar.getBoundingClientRect().top;
+  const maxLeft = Math.max(10, window.innerWidth - element.offsetWidth - 10);
+  const maxTop = Math.max(10, toolbarTop - element.offsetHeight - 12);
+  element.style.left = `${Math.min(maxLeft, Math.max(10, left))}px`;
+  element.style.top = `${Math.min(maxTop, Math.max(10, top))}px`;
+  element.style.right = "auto";
+  element.style.bottom = "auto";
+}
+
+function layoutWhiteboardControls() {
+  if (whiteboard.hidden) return;
+  if (window.matchMedia("(min-width: 701px) and (max-width: 1750px)").matches) {
+    wbToolbar.style.setProperty("--wb-toolbar-scale", String(Math.min(1, (window.innerWidth - 24) / wbToolbar.offsetWidth)));
+  } else {
+    wbToolbar.style.removeProperty("--wb-toolbar-scale");
+  }
+  for (const element of [wbLeftActions, wbTimer]) {
+    if (!element.style.left) continue;
+    const rect = element.getBoundingClientRect();
+    positionWhiteboardFloat(element, rect.left, rect.top);
+  }
+}
+
+function makeWhiteboardControlDraggable(handle, element) {
+  let pointer = null;
+  let suppressClick = false;
+  handle.addEventListener("pointerdown", event => {
+    if (event.button !== 0 || whiteboard.hidden) return;
+    suppressClick = false;
+    const rect = element.getBoundingClientRect();
+    pointer = { id: event.pointerId, x: event.clientX, y: event.clientY, left: rect.left, top: rect.top, moved: false };
+    handle.setPointerCapture(event.pointerId);
+  });
+  handle.addEventListener("pointermove", event => {
+    if (!pointer || event.pointerId !== pointer.id) return;
+    const dx = event.clientX - pointer.x;
+    const dy = event.clientY - pointer.y;
+    if (!pointer.moved && Math.hypot(dx, dy) < 6) return;
+    pointer.moved = true;
+    handle.classList.add("is-dragging");
+    event.preventDefault();
+    positionWhiteboardFloat(element, pointer.left + dx, pointer.top + dy);
+  });
+  const finish = event => {
+    if (!pointer || event.pointerId !== pointer.id) return;
+    if (pointer.moved) {
+      suppressClick = true;
+    }
+    pointer = null;
+    handle.classList.remove("is-dragging");
+  };
+  handle.addEventListener("pointerup", finish);
+  handle.addEventListener("pointercancel", finish);
+  handle.addEventListener("click", event => {
+    if (!suppressClick) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    suppressClick = false;
+  }, true);
+}
+
 function closeWhiteboard() {
   if (whiteboard.hidden) return;
   saveActiveWhiteboard();
@@ -870,6 +935,7 @@ function openWhiteboard(mode = "board") {
   document.body.classList.add("is-whiteboard");
   enterWhiteboardFullscreen();
   requestAnimationFrame(() => {
+    layoutWhiteboardControls();
     resizeWhiteboardCanvas();
     applyWhiteboardBackground();
     loadWhiteboardImage(activeWhiteboard()?.image || "");
@@ -1486,7 +1552,7 @@ document.addEventListener("click", event => {
     case "zoom-in": changePaperZoom(.1); break;
     case "reset-view": resetPaperView(); break;
     case "fullscreen": toggleWhiteboardFullscreen(); break;
-    case "toggle-timer": $("#wbTimer").classList.toggle("is-collapsed"); break;
+    case "toggle-timer": wbTimer.classList.toggle("is-collapsed"); requestAnimationFrame(layoutWhiteboardControls); break;
     case "timer-start": startWhiteboardTimer(); break;
     case "timer-pause": pauseWhiteboardTimer(); break;
     case "timer-add": clearTimeout(state.whiteboard.timerId); state.whiteboard.timerSeconds += 60; if (state.whiteboard.timerEnd) state.whiteboard.timerEnd += 60000; updateWhiteboardTimer(); break;
@@ -1551,7 +1617,10 @@ wbCanvas.addEventListener("pointerleave", event => { if (event.pointerType === "
 $("#wbSize").addEventListener("input", event => { state.whiteboard.size = Number(event.target.value); });
 $("#wbTimerMinutes").addEventListener("input", resetWhiteboardTimer);
 $("#wbTimerSeconds").addEventListener("input", resetWhiteboardTimer);
-window.addEventListener("resize", () => { if (!whiteboard.hidden) resizeWhiteboardCanvas(); });
+makeWhiteboardControlDraggable($(".wb-float-button"), wbLeftActions);
+makeWhiteboardControlDraggable($(".wb-timer-summary"), wbTimer);
+window.addEventListener("resize", () => { if (!whiteboard.hidden) { layoutWhiteboardControls(); resizeWhiteboardCanvas(); } });
+document.addEventListener("fullscreenchange", () => requestAnimationFrame(layoutWhiteboardControls));
 announceToggle.addEventListener("click", () => {
   state.announce = !state.announce;
   localStorage.setItem("announce", state.announce ? "on" : "off");
