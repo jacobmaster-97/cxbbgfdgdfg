@@ -14,7 +14,7 @@ const defaultRules = () => [
   { id: "negative-homework", name: "欠交功課", kind: "negative", points: 1 },
   { id: "negative-disruption", name: "干擾課堂", kind: "negative", points: 1 },
 ];
-function readJson(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } }
+function readJson(key) { try { return JSON.parse(window.TeacherStorage.getItem(key) || "null"); } catch { return null; } }
 function loadScores() {
   const saved = readJson(SCORE_KEY);
   return { rules: Array.isArray(saved?.rules) ? saved.rules : defaultRules(), entries: Array.isArray(saved?.entries) ? saved.entries : [], plants: saved?.plants && typeof saved.plants === "object" ? saved.plants : {}, selectedClassId: saved?.selectedClassId || "" };
@@ -30,7 +30,7 @@ let multiMode = false;
 let activeKind = "positive";
 let pendingDeduction = null;
 let recentlyWateredIds = new Set();
-function persist() { localStorage.setItem(SCORE_KEY, JSON.stringify(scores)); }
+function persist() { window.TeacherStorage.setItem(SCORE_KEY, JSON.stringify(scores)); }
 function currentClass() { return classes.find(item => item.id === scores.selectedClassId) || null; }
 function sortedStudents(students) { return [...students].sort((a, b) => (Number(a.seat) || 9999) - (Number(b.seat) || 9999) || String(a.name || "").localeCompare(String(b.name || ""), "zh-Hant")); }
 function totalForStudent(id) { return scores.entries.reduce((sum, entry) => sum + (entry.studentId === id && Number.isFinite(entry.points) ? entry.points : 0), 0); }
@@ -314,3 +314,4 @@ $("#scoreDialog").addEventListener("close", () => { pendingDeduction = null; if 
 window.addEventListener("pageshow", render);
 window.addEventListener("storage", event => { if (event.key === CLASS_KEY) { selectedIds.clear(); render(); } if (event.key === SCORE_KEY) { scores = loadScores(); selectedIds.clear(); render(); } });
 render();
+window.addEventListener("teacher-data-reloaded", () => { scores = loadScores(); selectedIds.clear(); render(); });

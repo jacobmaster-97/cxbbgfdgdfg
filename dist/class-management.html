@@ -30,10 +30,13 @@
           </div>
         </section>
       </div>
-      <footer class="window-footer"><p>學生資料只保存在這部裝置。<button class="inline-link" type="button" data-action="export-all">匯出全部備份</button>，或 <label class="inline-link">匯入 JSON 備份<input id="backupInput" type="file" accept="application/json,.json" /></label>。</p></footer>
+      <footer class="window-footer"><p>學生資料先保存在本機，登入後可同步至私人雲端。<button class="inline-link" type="button" data-action="export-all">匯出全部備份</button>，或 <label class="inline-link">匯入 JSON 備份<input id="backupInput" type="file" accept="application/json,.json" /></label>。</p></footer>
     </main>
     <dialog id="editorDialog"><form id="editorForm"><div class="dialog-heading"><div><p id="dialogEyebrow" class="eyebrow">資料</p><h2 id="dialogTitle">—</h2></div><button class="close-dialog" type="button" data-action="close-dialog" aria-label="關閉">×</button></div><div id="dialogContent"></div><div class="dialog-actions"><button class="quiet" type="button" data-action="close-dialog">取消</button><button id="dialogSubmit" class="primary" type="submit">儲存</button></div></form></dialog>
     <div id="toast" class="toast" role="status"></div>
+    <script src="./cloud-config.js"></script>
+    <script src="./cloud-model.js"></script>
+    <script src="./cloud-sync.js"></script>
     <script src="./class-management.js"></script>
   </body>
 </html>

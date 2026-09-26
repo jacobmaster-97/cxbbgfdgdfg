@@ -1,0 +1,14 @@
+.teacher-sync-trigger{border:1px solid rgba(100,116,139,.3);border-radius:14px;background:rgba(255,255,255,.9);color:#30446c;padding:9px 13px;font:600 13px/1.3 system-ui,sans-serif;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.teacher-sync-floating{position:fixed;right:16px;bottom:16px;z-index:50}
+.teacher-sync-dialog{box-sizing:border-box;width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:24px;border:1px solid #d9e0eb;border-radius:24px;background:#fff;color:#243451;box-shadow:0 20px 80px #14203e40;font:15px/1.6 system-ui,sans-serif;overflow:auto}
+.teacher-sync-dialog::backdrop{background:#14203e70;backdrop-filter:blur(4px)}
+.teacher-sync-dialog .teacher-sync-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.teacher-sync-dialog h2{font-size:23px;margin:0}.teacher-sync-dialog h3{font-size:17px;margin:0 0 8px}.teacher-sync-dialog p{margin:12px 0;line-height:1.6;color:#43536b}
+.teacher-sync-dialog button{border:1px solid #d3dbea;border-radius:10px;background:#f4f7fc;color:#263c66;padding:10px 14px;font:600 14px/1.3 system-ui,sans-serif;cursor:pointer;min-height:42px}
+.teacher-sync-dialog button:disabled{opacity:.5;cursor:default}.teacher-sync-dialog button:focus-visible,.teacher-sync-trigger:focus-visible{outline:3px solid #769bff;outline-offset:3px}
+.teacher-sync-dialog .teacher-sync-actions{display:flex;flex-wrap:wrap;gap:8px}.teacher-sync-dialog [data-sync-action="connect"]{background:#3859c9;color:white;border-color:#3859c9}
+.teacher-sync-dialog .teacher-sync-status{padding:12px;background:#eef3ff;border-radius:12px;color:#263e75}.teacher-sync-dialog .teacher-sync-choice{margin-top:20px;padding:16px;border-radius:14px;background:#fff8eb;border:1px solid #edd5a3}
+.teacher-sync-dialog .teacher-sync-version{border-top:1px solid #edd5a3;margin-top:12px;padding-top:4px}.teacher-sync-dialog .teacher-sync-config{margin-top:20px;border-top:1px solid #e1e7f1;padding-top:16px}
+.teacher-sync-dialog summary{cursor:pointer;font-weight:600}.teacher-sync-dialog form{display:grid;gap:14px;margin-top:16px}.teacher-sync-dialog label{display:grid;gap:6px;font-weight:600}.teacher-sync-dialog input{box-sizing:border-box;width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#243451;font:14px system-ui,sans-serif}
+.teacher-sync-dialog .teacher-sync-note,.teacher-sync-dialog details p{font-size:13px;color:#596880}.teacher-sync-dialog [hidden]{display:none!important}
+@media(max-width:600px){.teacher-sync-dialog{padding:18px}.teacher-sync-trigger{padding:8px;font-size:12px}.teacher-sync-dialog .teacher-sync-actions button{flex:1 1 45%}}

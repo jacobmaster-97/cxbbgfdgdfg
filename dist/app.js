@@ -2,7 +2,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 const state = {
-  announce: localStorage.getItem("announce") !== "off",
+  announce: window.TeacherStorage.getItem("announce") !== "off",
   monthOffset: 0,
   ui: { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", examAlarmVolume: 70 },
   toastTimer: null,
@@ -95,8 +95,8 @@ const TIMETABLE_DEFAULT = {
 function cloneTimetableDefault() { return JSON.parse(JSON.stringify(TIMETABLE_DEFAULT)); }
 function loadTimetable() {
   try {
-    const prototype = JSON.parse(localStorage.getItem("cycle-timetable-prototype-v4") || "{}");
-    const dashboard = JSON.parse(localStorage.getItem(TIMETABLE_STORAGE_KEY) || "{}");
+    const prototype = JSON.parse(window.TeacherStorage.getItem("cycle-timetable-prototype-v4") || "{}");
+    const dashboard = JSON.parse(window.TeacherStorage.getItem(TIMETABLE_STORAGE_KEY) || "{}");
     const saved = prototype.setup ? { ...prototype, exceptions: prototype.excludedRanges || [] } : dashboard;
     const result = { ...cloneTimetableDefault(), ...saved, setup: { ...TIMETABLE_DEFAULT.setup, ...(saved.setup || {}) }, exceptions: saved.exceptions || [], publicHolidays: saved.publicHolidays || [], lessons: { ...TIMETABLE_DEFAULT.lessons, ...(saved.lessons || {}) } };
     result.selectedClass = result.classes.includes(result.selectedClass) ? result.selectedClass : result.classes[0];
@@ -105,7 +105,7 @@ function loadTimetable() {
 }
 let timetable = loadTimetable();
 let timetableTab = "today";
-function saveTimetable() { localStorage.setItem(TIMETABLE_STORAGE_KEY, JSON.stringify(timetable)); }
+function saveTimetable() { window.TeacherStorage.setItem(TIMETABLE_STORAGE_KEY, JSON.stringify(timetable)); }
 function timetableDateValue(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
 function timetableLocalDate(value) { return new Date(`${value}T12:00:00`); }
 function timetableWeekday(date) { return date.getDay() !== 0 && date.getDay() !== 6; }
@@ -176,7 +176,7 @@ const appLibraryList = $("#appLibraryList");
 
 function savedUIPreferences() {
   try {
-    const preferences = { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", examAlarmVolume: 70, ...JSON.parse(localStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
+    const preferences = { theme: "sunset", scale: 100, dark: false, reduceMotion: false, largeText: false, highContrast: false, clockFormat: "24", examAlarmVolume: 70, ...JSON.parse(window.TeacherStorage.getItem(UI_PREFERENCES_KEY) || "{}") };
     preferences.examAlarmVolume = Math.max(0, Math.min(100, Number(preferences.examAlarmVolume) || 0));
     return preferences;
   } catch {
@@ -185,7 +185,7 @@ function savedUIPreferences() {
 }
 
 function saveUIPreferences() {
-  localStorage.setItem(UI_PREFERENCES_KEY, JSON.stringify(state.ui));
+  window.TeacherStorage.setItem(UI_PREFERENCES_KEY, JSON.stringify(state.ui));
 }
 
 function applyUIPreferences() {
@@ -200,7 +200,7 @@ function applyUIPreferences() {
 }
 
 function hiddenDockApps() {
-  try { return new Set(JSON.parse(localStorage.getItem(HIDDEN_DOCK_APPS_KEY) || "[]")); } catch { return new Set(); }
+  try { return new Set(JSON.parse(window.TeacherStorage.getItem(HIDDEN_DOCK_APPS_KEY) || "[]")); } catch { return new Set(); }
 }
 
 function applyDockVisibility() {
@@ -378,14 +378,14 @@ function whiteboardStorageKey() {
 function loadWhiteboardRecords() {
   const storageKey = whiteboardStorageKey();
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
+    const saved = JSON.parse(window.TeacherStorage.getItem(storageKey));
     if (Array.isArray(saved?.boards) && saved.boards.length) {
       state.whiteboard.boards = saved.boards;
       state.whiteboard.activeId = saved.activeId && saved.boards.some(board => board.id === saved.activeId) ? saved.activeId : saved.boards[0].id;
       return;
     }
   } catch {
-    localStorage.removeItem(storageKey);
+    window.TeacherStorage.removeItem(storageKey);
   }
   const board = createWhiteboardRecord();
   state.whiteboard.boards = [board];
@@ -437,7 +437,7 @@ function resetPaperView() {
 
 function persistWhiteboardRecords() {
   try {
-    localStorage.setItem(whiteboardStorageKey(), JSON.stringify({ boards: state.whiteboard.boards, activeId: state.whiteboard.activeId }));
+    window.TeacherStorage.setItem(whiteboardStorageKey(), JSON.stringify({ boards: state.whiteboard.boards, activeId: state.whiteboard.activeId }));
   } catch {
     showToast(`${state.whiteboard.mode === "homework" ? "功課紙" : "白板"}內容過大，未能再儲存到此裝置`);
   }
@@ -978,11 +978,11 @@ function parseLocalDateTime(dateValue, timeValue) {
 function savedExamSettings() {
   const defaults = { subject: "", examDate: localDateValue(), startTime: "09:00", endTime: "10:30" };
   try {
-    const saved = JSON.parse(localStorage.getItem(EXAM_SETTINGS_KEY));
+    const saved = JSON.parse(window.TeacherStorage.getItem(EXAM_SETTINGS_KEY));
     if (!saved) return defaults;
     return { ...defaults, ...saved };
   } catch {
-    localStorage.removeItem(EXAM_SETTINGS_KEY);
+    window.TeacherStorage.removeItem(EXAM_SETTINGS_KEY);
     return defaults;
   }
 }
@@ -1240,7 +1240,7 @@ function enterExamProjection(settings) {
   state.exam.schedule = { ...settings, start, end };
   state.exam.alarmPlayed = Date.now() >= end.getTime();
   state.exam.clockAnchor = { epoch: Date.now(), monotonic: performance.now() };
-  localStorage.setItem(EXAM_SETTINGS_KEY, JSON.stringify(settings));
+  window.TeacherStorage.setItem(EXAM_SETTINGS_KEY, JSON.stringify(settings));
   const minutes = Math.round((end.getTime() - start.getTime()) / 60000);
   projectionContent.innerHTML = `<div class="projection-meta"><p>${escapeHTML(formatFullDate(start))}</p><h1>${escapeHTML(settings.subject)}</h1><strong>${escapeHTML(settings.startTime)} 至 ${escapeHTML(settings.endTime)}（${minutes}分鐘）</strong></div>
     <div class="projection-clock-stage"><div class="projection-digital-block"><strong class="projection-digital-clock" id="projectionMainClock">--:--:--</strong><span class="sr-only" id="projectionStatus">尚未開始</span></div>
@@ -1338,6 +1338,7 @@ function renderSettings() {
     <section class="demo-card"><h3>輔助模式</h3><div class="settings-row"><span>大字模式</span><button class="secondary-action" data-ui-action="largeText" aria-pressed="${state.ui.largeText}">${state.ui.largeText ? "已開啟" : "已關閉"}</button></div><div class="settings-row"><span>高對比模式</span><button class="secondary-action" data-ui-action="highContrast" aria-pressed="${state.ui.highContrast}">${state.ui.highContrast ? "已開啟" : "已關閉"}</button></div><label class="settings-row"><span>時鐘顯示格式</span><select id="clockFormat"><option value="24" ${state.ui.clockFormat === "24" ? "selected" : ""}>24 小時</option><option value="12" ${state.ui.clockFormat === "12" ? "selected" : ""}>12 小時（上午／下午）</option></select></label></section>
     <section class="demo-card"><h3>聲音</h3><div class="settings-row"><label for="examAlarmVolume">考試鬧鐘音量</label><div class="settings-volume-controls"><input id="examAlarmVolume" type="range" min="0" max="100" step="5" value="${state.ui.examAlarmVolume}" aria-label="考試鬧鐘音量"><output id="examAlarmVolumeValue" for="examAlarmVolume">${state.ui.examAlarmVolume}%</output><button class="secondary-action" type="button" data-ui-action="preview-alarm">${state.exam.alarmPreview ? "停止試聽" : "試聽鬧鐘"}</button></div></div><p class="settings-help">音量 0% 為靜音；考試到時仍會顯示提示。實際聲量也受裝置音量影響。</p></section>
     <section class="demo-card"><h3>資料備份與還原</h3><p class="settings-help">按類別下載 JSON 備份。匯入時會先顯示檔案內容及影響範圍。</p><div class="settings-export-grid">${Object.entries(SettingsData.categories).map(([key, name]) => `<button type="button" class="secondary-action" data-settings-export="${key}">匯出${name}</button>`).join("")}</div><label class="settings-file-label">選擇備份檔案以預覽<input id="settingsImportFile" type="file" accept=".json,application/json"></label><div id="settingsImportPreview" aria-live="polite"></div></section>
+    <section class="demo-card"><h3>帳戶與共用資料</h3><p data-cloud-status>${window.TeacherCloud.status()}</p><button type="button" class="secondary-action" data-cloud-open>登入與同步設定</button></section>
     <section class="demo-card"><h3>資料管理</h3><div id="settingsStorageStatus">${settingsStatusMarkup()}</div><div class="settings-clear-list"><div><span>白板資料 <small>${info.boardCount} 張</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="whiteboard" ${info.boardCount ? "" : "disabled"}>清除白板</button></div><div><span>遊戲進度 <small>遊戲沒有本機紀錄；可重設目前進行中的兩個遊戲</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="games">重設遊戲</button></div><div><span>加分紀錄 <small>${info.scoreCount} 筆；保留自訂規則</small></span><button type="button" class="secondary-action danger-action" data-settings-clear="scores" ${info.scoreCount ? "" : "disabled"}>清除紀錄</button></div></div></section>
   </div>`;
 }
@@ -1498,7 +1499,7 @@ document.addEventListener("click", (event) => {
   if (timerAction) {
     const { timerAction: action } = timerAction.dataset;
     if (action === "clear") {
-      localStorage.removeItem(EXAM_SETTINGS_KEY);
+      window.TeacherStorage.removeItem(EXAM_SETTINGS_KEY);
       renderExamForm();
     }
     if (action === "edit") renderExamForm(state.exam.schedule || savedExamSettings());
@@ -1632,7 +1633,7 @@ document.addEventListener("click", (event) => {
     const hidden = hiddenDockApps();
     const name = libraryToggle.dataset.libraryToggle;
     if (hidden.has(name)) hidden.delete(name); else hidden.add(name);
-    localStorage.setItem(HIDDEN_DOCK_APPS_KEY, JSON.stringify([...hidden]));
+    window.TeacherStorage.setItem(HIDDEN_DOCK_APPS_KEY, JSON.stringify([...hidden]));
     applyDockVisibility();
     renderAppLibrary();
   }
@@ -1736,7 +1737,7 @@ window.addEventListener("resize", () => { if (!whiteboard.hidden) { layoutWhiteb
 document.addEventListener("fullscreenchange", () => requestAnimationFrame(layoutWhiteboardControls));
 announceToggle.addEventListener("click", () => {
   state.announce = !state.announce;
-  localStorage.setItem("announce", state.announce ? "on" : "off");
+  window.TeacherStorage.setItem("announce", state.announce ? "on" : "off");
   updateAnnouncement();
   showToast(state.announce ? "整點報時已開啟" : "整點報時已關閉");
 });
@@ -1797,8 +1798,8 @@ document.addEventListener("change", event => {
   if (event.target.id !== "dashboardClassSelect") return;
   timetable.selectedClass = event.target.value;
   try {
-    const prototype = JSON.parse(localStorage.getItem("cycle-timetable-prototype-v4") || "{}");
-    if (prototype.setup) { prototype.selectedClass = timetable.selectedClass; localStorage.setItem("cycle-timetable-prototype-v4", JSON.stringify(prototype)); }
+    const prototype = JSON.parse(window.TeacherStorage.getItem("cycle-timetable-prototype-v4") || "{}");
+    if (prototype.setup) { prototype.selectedClass = timetable.selectedClass; window.TeacherStorage.setItem("cycle-timetable-prototype-v4", JSON.stringify(prototype)); }
     else saveTimetable();
   } catch { saveTimetable(); }
   renderDashboardSchedule();
@@ -1813,3 +1814,12 @@ buildCalendar();
 renderDashboardSchedule();
 updateClock();
 setInterval(updateClock, 1000);
+window.addEventListener("teacher-data-reloaded", () => {
+  timetable = loadTimetable(); buildCalendar(); renderDashboardSchedule();
+  if (document.querySelector(".settings-panel")) renderSettings();
+});
+document.addEventListener("click", event => {
+  if (event.target.closest("[data-cloud-open]")) {
+    document.querySelector("#appDialog")?.close(); window.TeacherCloud.open();
+  }
+});

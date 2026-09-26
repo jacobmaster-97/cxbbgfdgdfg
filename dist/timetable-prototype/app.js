@@ -18,7 +18,7 @@ const localDate = value => new Date(`${value}T12:00:00`);
 
 function load() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("cycle-timetable-prototype-v3") || "{}");
+    const saved = JSON.parse(window.TeacherStorage.getItem(STORAGE_KEY) || window.TeacherStorage.getItem("cycle-timetable-prototype-v3") || "{}");
     const savedRanges = saved.excludedRanges || [];
     const migratedPublicHolidays = savedRanges.filter(entry => entry.source === "公眾假期 JSON");
     const result = { ...structuredClone(DEFAULT), ...saved, setup: { ...DEFAULT.setup, ...(saved.setup || {}) }, excludedRanges: savedRanges.filter(entry => entry.source !== "公眾假期 JSON"), publicHolidays: saved.publicHolidays || migratedPublicHolidays };
@@ -29,7 +29,7 @@ function load() {
     return result;
   } catch { return structuredClone(DEFAULT); }
 }
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function save() { window.TeacherStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 function cycleDays() { return Array.from({ length: Number(data.setup.cycleLength) }, (_, index) => index + 1); }
 function cycleLabel(day) { return `Day ${String.fromCharCode(64 + Number(day))}`; }
 function isWeekday(date) { return date.getDay() !== 0 && date.getDay() !== 6; }
@@ -95,3 +95,6 @@ document.addEventListener("click", event => { const button = event.target.closes
 document.addEventListener("change", event => { if (event.target.id === "classSelect") { selectedClass = event.target.value; data.selectedClass = selectedClass; save(); renderTimetable(); renderToday(); } if (event.target.id === "sourceInput") previewSource(event.target.files[0], "#sourceLabel", "#sourcePreview", "辨認結果會顯示於下方草稿。"); if (event.target.id === "calendarSourceInput") { const file = event.target.files[0]; if (file && (file.type === "application/json" || file.name.toLowerCase().endsWith(".json"))) importPublicHolidayJSON(file); else previewSource(file, "#calendarSourceLabel", "#calendarSourcePreview", "辨認服務接入後會擷取不適用日期並建立核對草稿。"); } });
 document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => showTab(button.dataset.tab)));
 renderSetup(); renderTimetable(); renderToday();
+window.addEventListener("teacher-data-reloaded", () => {
+  data = load(); selectedClass = data.selectedClass || data.classes[0]; renderSetup(); renderTimetable(); renderToday();
+});

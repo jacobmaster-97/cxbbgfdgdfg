@@ -7,8 +7,8 @@ const DEFAULT = {
 };
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
-function load() { try { const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); return { ...DEFAULT, ...saved, setup: { ...DEFAULT.setup, ...(saved.setup || {}) }, lessons: saved.lessons || {}, morningPeriods: saved.morningPeriods || DEFAULT.morningPeriods, afternoonPeriods: saved.afternoonPeriods || DEFAULT.afternoonPeriods, blocks: saved.blocks || [] }; } catch { return DEFAULT; } }
-const data = load(); let selectedClass = data.classes[0];
+function load() { try { const saved = JSON.parse(window.TeacherStorage.getItem(STORAGE_KEY) || "{}"); return { ...DEFAULT, ...saved, setup: { ...DEFAULT.setup, ...(saved.setup || {}) }, lessons: saved.lessons || {}, morningPeriods: saved.morningPeriods || DEFAULT.morningPeriods, afternoonPeriods: saved.afternoonPeriods || DEFAULT.afternoonPeriods, blocks: saved.blocks || [] }; } catch { return DEFAULT; } }
+let data = load(); let selectedClass = data.classes[0];
 function dayLabel(day) { return `Day ${String.fromCharCode(64 + day)}`; }
 function lessonCell(section, day, period) { const lesson = data.lessons[selectedClass]?.[`${section}-${day}-${period}`]; return `<td>${lesson?.subject ? `<strong>${esc(lesson.subject)}</strong>${lesson.room ? `<small>${esc(lesson.room)}</small>` : ""}` : ""}</td>`; }
 function blocks(section, after, span) { return data.blocks.filter(block => block.section === section && Number(block.after) === after).map(block => `<tr class="block"><td></td><td>${esc(block.start)}${block.end ? `–${esc(block.end)}` : ""}</td><td colspan="${span}">${esc(block.label)}</td></tr>`).join(""); }
@@ -16,3 +16,6 @@ function table(section, label, columns) { const periods = data[`${section}Period
 function render() { $("#termName").textContent = data.setup.termName; $("#classSelect").innerHTML = data.classes.map(name => `<option ${name === selectedClass ? "selected" : ""}>${esc(name)}</option>`).join(""); const cycle = Array.from({ length: Number(data.setup.cycleLength) || 6 }, (_, index) => ({ value: index + 1, label: dayLabel(index + 1) })); const weekdays = WEEKDAYS.map((label, index) => ({ value: index, label })); $("#timetable").innerHTML = table("morning", "上午：循環日課表", cycle) + table("afternoon", "下午：星期課表", weekdays); }
 $("#classSelect").addEventListener("change", event => { selectedClass = event.target.value; render(); });
 render();
+window.addEventListener("teacher-data-reloaded", () => {
+  data = load(); if (!data.classes.includes(selectedClass)) selectedClass = data.classes[0]; render();
+});

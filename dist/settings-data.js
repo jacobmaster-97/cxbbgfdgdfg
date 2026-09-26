@@ -11,13 +11,13 @@ const SettingsData = (() => {
     timetable: "時間表",
     scores: "加分紀錄",
   };
-  const read = key => { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } };
+  const read = key => { try { return JSON.parse(window.TeacherStorage.getItem(key) || "null"); } catch { return null; } };
   const object = value => value && typeof value === "object" && !Array.isArray(value);
   const classes = () => read(CLASS_KEY) || read(LEGACY_CLASS_KEY) || { classes: [], selectedClassId: "" };
   const validClass = item => object(item) && typeof item.id === "string" && item.id && typeof item.name === "string" && item.name;
   const validStudent = item => object(item) && typeof item.id === "string" && item.id && typeof item.name === "string";
   const storageBytes = keys => keys.reduce((sum, key) => {
-    const value = localStorage.getItem(key);
+    const value = window.TeacherStorage.getItem(key);
     return sum + (value === null ? 0 : (key.length + value.length) * 2);
   }, 0);
 
@@ -27,7 +27,7 @@ const SettingsData = (() => {
     if (category === "classes") data = { classes: (roster.classes || []).map(({ id, name }) => ({ id, name })), selectedClassId: roster.selectedClassId || "" };
     if (category === "students") data = { classes: (roster.classes || []).map(({ id, name, students }) => ({ id, name, students: students || [] })) };
     if (category === "timetable") {
-      data = Object.fromEntries(TIMETABLE_KEYS.filter(key => localStorage.getItem(key) !== null).map(key => [key, read(key)]));
+      data = Object.fromEntries(TIMETABLE_KEYS.filter(key => window.TeacherStorage.getItem(key) !== null).map(key => [key, read(key)]));
       if (!Object.keys(data).length) data[TIMETABLE_KEYS[1]] = typeof timetable === "undefined" ? { classes: [], lessons: {} } : timetable;
     }
     if (category === "scores") data = read(SCORE_KEY) || { rules: [], entries: [], plants: {}, selectedClassId: "" };
@@ -69,13 +69,13 @@ const SettingsData = (() => {
         }
       });
       if (!next.classes.some(item => item.id === next.selectedClassId)) next.selectedClassId = next.classes[0]?.id || "";
-      localStorage.setItem(CLASS_KEY, JSON.stringify(next));
+      window.TeacherStorage.setItem(CLASS_KEY, JSON.stringify(next));
     }
     if (category === "timetable") {
       const fallback = data[TIMETABLE_KEYS[0]] || data[TIMETABLE_KEYS[1]];
-      TIMETABLE_KEYS.forEach(key => localStorage.setItem(key, JSON.stringify(data[key] || fallback)));
+      TIMETABLE_KEYS.forEach(key => window.TeacherStorage.setItem(key, JSON.stringify(data[key] || fallback)));
     }
-    if (category === "scores") localStorage.setItem(SCORE_KEY, JSON.stringify(data));
+    if (category === "scores") window.TeacherStorage.setItem(SCORE_KEY, JSON.stringify(data));
   }
 
   function status() {
@@ -90,10 +90,10 @@ const SettingsData = (() => {
   }
 
   function clear(category) {
-    if (category === "whiteboard") localStorage.removeItem(BOARD_KEY);
+    if (category === "whiteboard") window.TeacherStorage.removeItem(BOARD_KEY);
     if (category === "scores") {
       const saved = read(SCORE_KEY);
-      if (object(saved)) localStorage.setItem(SCORE_KEY, JSON.stringify({ ...saved, entries: [], plants: {} }));
+      if (object(saved)) window.TeacherStorage.setItem(SCORE_KEY, JSON.stringify({ ...saved, entries: [], plants: {} }));
     }
   }
   return { categories, exportPayload, validate, summary, importPayload, status, clear };

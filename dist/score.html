@@ -33,6 +33,9 @@
   <dialog id="rulesDialog" class="modal rules-modal" aria-labelledby="rulesDialogTitle"><div class="dialog-head"><div><p class="eyebrow">教師設定</p><h2 id="rulesDialogTitle">管理加分／減分項目</h2></div><button class="icon-button" type="button" data-close="rulesDialog" aria-label="關閉">×</button></div><div class="dialog-content"><p class="helper">修改項目不會改動已記錄的分數和原因。</p><form id="ruleForm"><input id="ruleId" type="hidden" /><label>項目名稱<input id="ruleName" maxlength="40" required placeholder="例如：主動回答" /></label><label>類別<select id="ruleKind"><option value="positive">加分</option><option value="negative">減分</option></select></label><label>分值<input id="rulePoints" type="number" min="1" max="99" step="1" value="1" required /></label><button class="primary-button" type="submit" id="saveRule">新增項目</button><button id="cancelRuleEdit" type="button" hidden>取消編輯</button></form><div id="manageRuleList" class="manage-rule-list"></div></div></dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./cloud-config.js"></script>
+    <script src="./cloud-model.js"></script>
+    <script src="./cloud-sync.js"></script>
   <script src="./score.js"></script>
 </body>
 </html>
