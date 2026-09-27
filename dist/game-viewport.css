@@ -1,0 +1,34 @@
+html.game-fit,
+html.game-fit body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  scroll-behavior: auto;
+}
+html.game-fit .app,
+html.game-fit .shell {
+  position: absolute;
+  display: flow-root;
+  left: var(--game-left, 50%);
+  top: var(--game-top, 50%);
+  width: 1280px;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 12px;
+  transform: translate(-50%, -50%) scale(var(--game-scale, 1));
+  transform-origin: center;
+}
+html.game-fit .setup,
+html.game-fit .finish,
+html.game-fit .end { margin: 12px auto; }
+html.game-fit .app:has(> #setup:not(.hidden)),
+html.game-fit .app:has(> #finish:not(.hidden)) { width: 760px; }
+html.game-fit .shell:has(> #setup:not(.hidden)) { width: 940px; }
+html.game-fit .shell:has(> #finished:not(.hidden)) { width: 700px; }
