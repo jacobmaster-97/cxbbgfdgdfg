@@ -46,9 +46,10 @@
     .completion { display:flex; align-items:center; justify-content:center; min-height:50px; padding:9px 14px; color:#fff; border:4px solid #0a132a; background:rgba(8,29,67,.9); box-shadow:inset 0 0 0 2px var(--team); font-size:.98rem; font-weight:900; text-shadow:2px 2px #07142c; } .completion.done { color:var(--gold-light); } .completion.correct { background:color-mix(in srgb,var(--team) 55%,#071f4b); } .completion.skipped { border-style:dashed; }
     .skip-wrap { padding:0 15px 16px; } .skip { width:100%; padding:11px; color:#fff; border:3px solid #0a132a; border-radius:2px; background:#39404a; box-shadow:inset 0 0 0 2px var(--team); font-weight:900; text-shadow:2px 2px #111; } .skip:hover:not(:disabled) { background:#505c6a; } .skip:disabled { cursor:default; opacity:.55; }
     .winner { color:var(--gold-light); font-size:clamp(2rem,5vw,3rem); font-weight:900; text-shadow:4px 4px #a3192c,7px 7px #0a132a; } .final-score { color:#dcecff; font-size:1.15rem; line-height:1.7; }
-    @media (max-width:900px) { .arena { grid-template-columns:1fr 1fr; } .question-card { grid-column:1 / -1; grid-row:1; min-height:245px; } .equation { font-size:clamp(3.8rem,12vw,6rem); } }
-    @media (max-width:560px) { .app { width:min(96vw,500px); } header { align-items:flex-start; } .header-note { display:none; } .top-actions .secondary { padding:9px; font-size:.82rem; } .timer { min-width:70px; font-size:1.1rem; } .arena,.completion-board,.key-guides { grid-template-columns:1fr; } .question-card { grid-column:auto; } .setup-grid { grid-template-columns:1fr; } .team-card.active { transform:none; } }
+
+
   </style>
+  <link rel="stylesheet" href="./game-viewport.css">
 </head>
 <body>
   <main class="app">
@@ -90,6 +91,7 @@
 
     <section id="finish" class="finish hidden"><h2>🏆 遊戲結束</h2><div id="winner" class="winner"></div><p id="finalScore" class="final-score"></p><button id="playAgain" class="primary large">再玩一次</button></section>
   </main>
+  <script src="./game-viewport.js"></script>
   <script>
     const $ = id => document.getElementById(id);
     const colors = ['#e65362', '#2589d7'];
