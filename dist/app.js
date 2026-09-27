@@ -1414,6 +1414,7 @@ function openBingoGame() {
   closeTreasureGame();
   exitExamProjection();
   bingoGame.hidden = false;
+  $("#bingoFrame").contentWindow.GameViewport?.schedule();
   $$(".dock-item").forEach(item => item.classList.toggle("active", item.dataset.app === "數學賓果"));
 }
 
@@ -1427,6 +1428,7 @@ function openTreasureGame() {
   closeBingoGame();
   exitExamProjection();
   treasureGame.hidden = false;
+  $("#treasureFrame").contentWindow.GameViewport?.schedule();
   $$(".dock-item").forEach(item => item.classList.toggle("active", item.dataset.app === "乘法寶藏"));
 }
 
