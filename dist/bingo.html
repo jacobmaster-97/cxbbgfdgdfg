@@ -4,62 +4,76 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#183153">
-  <title>數學賓果大激鬥</title>
+  <title>數學賓果大激鬥｜單人對電腦版</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23183153'/%3E%3Cpath d='M15 18h34v28H15z' fill='%23ffd95a'/%3E%3Cpath d='M22 25h20M22 32h20M22 39h20M29 22v20M36 22v20' stroke='%23183153' stroke-width='3'/%3E%3C/svg%3E">
   <style>
-    :root { --ink:#183153; --muted:#60738b; --paper:#fffdf6; --sky:#e7f6ff; --yellow:#ffd95a; --red:#ea5b5b; --blue:#2b8dda; --green:#42b979; }
+    :root { --ink:#121931; --navy:#102852; --navy-dark:#07142c; --cream:#fff1d2; --gold:#ffd75a; --gold-light:#fff099; --red:#d92731; --red-dark:#731425; --blue:#1472d2; --blue-dark:#0b326f; --green:#31ae25; --green-dark:#167c31; }
     * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; color:var(--ink); font-family:"PingFang TC","Microsoft JhengHei",system-ui,sans-serif; background:radial-gradient(circle at 12% 8%,#fff4ac 0 7%,transparent 28%),linear-gradient(135deg,#dff5ff,#f6fbff 45%,#fff5ce); }
-    :fullscreen { background:linear-gradient(135deg,#dff5ff,#f6fbff 45%,#fff5ce); overflow:auto; }
-    :fullscreen .app { min-height:100vh; padding-top:24px; }
+    body { min-height:100vh; margin:0; color:#fff; font-family:"Arial Black","PingFang TC","Microsoft JhengHei",system-ui,sans-serif; background:linear-gradient(#4da1f1 0 53%,#2778c9 53% 58%,#1c803c 58% 69%,#43bd23 69% 100%); image-rendering:pixelated; }
+    body::before { position:fixed; z-index:-1; inset:0; content:""; opacity:.94; background:radial-gradient(ellipse at 10% 9%,#fff 0 4%,transparent 4.2%),radial-gradient(ellipse at 15% 10%,#e8f8ff 0 6%,transparent 6.2%),radial-gradient(ellipse at 78% 11%,#fff 0 5%,transparent 5.2%),radial-gradient(ellipse at 84% 12%,#e8f8ff 0 7%,transparent 7.2%),linear-gradient(160deg,transparent 0 55%,rgba(12,89,50,.65) 55% 67%,transparent 67%); background-size:760px 280px,760px 280px,880px 320px,880px 320px,100% 100%; }
+    :fullscreen { overflow:auto; background:linear-gradient(#4da1f1 0 53%,#2778c9 53% 58%,#1c803c 58% 69%,#43bd23 69% 100%); } :fullscreen .app { min-height:100vh; padding-top:22px; }
     button, input, select { font:inherit; } button { border:0; cursor:pointer; touch-action:manipulation; }
     .app { width:min(1480px,96vw); margin:auto; padding:clamp(14px,2vw,28px) 0 34px; }
     .hidden { display:none !important; }
-    .setup, .finish { width:min(640px,100%); margin:7vh auto; padding:clamp(24px,5vw,44px); text-align:center; border:4px solid white; border-radius:30px; background:rgba(255,253,246,.94); box-shadow:0 14px 40px rgba(37,86,120,.2); }
-    h1, h2, p { margin-top:0; } h1 { margin-bottom:7px; font-size:clamp(2rem,5vw,3.5rem); line-height:1.15; } h2 { font-size:2rem; }
-    .lead { color:var(--muted); font-size:1.08rem; line-height:1.65; }
-    .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:25px 0; text-align:left; }
-    label { color:#3f5772; font-weight:800; } input, select { display:block; width:100%; margin-top:7px; padding:12px; border:2px solid #c5deec; border-radius:13px; background:white; color:var(--ink); }
-    .primary, .secondary { border-radius:15px; padding:13px 20px; font-weight:900; font-size:1.05rem; } .primary { background:var(--ink); color:white; box-shadow:0 4px 0 #0b1d35; } .secondary { background:#e2eff5; color:var(--ink); }
-    .large { padding:16px 34px; font-size:1.18rem; }
-    .rules { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:20px 0; } .rule { padding:8px 12px; border-radius:999px; background:#edf8fc; color:#43617a; font-size:.9rem; font-weight:800; }
-    header { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:18px; } header h1 { margin:0; font-size:clamp(1.6rem,3.2vw,2.7rem); } .header-note { margin:5px 0 0; color:var(--muted); font-weight:700; }
-    .top-actions { display:flex; align-items:center; gap:10px; } .timer { min-width:106px; padding:11px 14px; border-radius:15px; background:var(--ink); color:#fff; text-align:center; font-size:1.5rem; font-weight:900; }
-    .arena { display:grid; grid-template-columns:minmax(250px,1fr) minmax(290px,.9fr) minmax(250px,1fr); gap:clamp(12px,2vw,28px); align-items:stretch; }
-    .team-card, .question-card { border-radius:26px; background:rgba(255,253,246,.97); box-shadow:0 10px 25px rgba(27,81,114,.16); overflow:hidden; }
-    .team-card { border:4px solid transparent; transition:transform .2s,border-color .2s; } .team-card.active { border-color:var(--team); transform:translateY(-4px); }
-    .team-header { display:flex; justify-content:space-between; align-items:center; padding:15px 17px 13px; border-bottom:2px dashed #d7e5eb; } .team-title { font-size:clamp(1.1rem,2vw,1.45rem); font-weight:900; } .team-score { color:var(--team); font-size:1.35rem; font-weight:900; }
-    .status { min-height:28px; padding:8px 15px 0; color:var(--muted); font-weight:800; font-size:.92rem; }
-    .bingo-card { display:grid; gap:7px; padding:14px 15px 18px; } .bingo-card.grid-4 { grid-template-columns:repeat(4,1fr); } .bingo-card.grid-5 { grid-template-columns:repeat(5,1fr); }
-    .number { aspect-ratio:1; min-height:47px; border-radius:13px; background:#eaf5fa; color:var(--ink); font-weight:900; font-size:clamp(1rem,2vw,1.55rem); box-shadow:inset 0 -3px 0 #c8e3ef; transition:.15s; } .number:hover:not(:disabled) { background:#d7edf8; transform:scale(1.03); }
-    .number.marked { color:white; background:var(--team); box-shadow:inset 0 -3px 0 rgba(0,0,0,.18); position:relative; } .number.marked::after { content:'✓'; position:absolute; inset:0; display:grid; place-items:center; font-size:1.7em; color:white; text-shadow:0 1px 2px rgba(0,0,0,.22); }
-    .number.marked span { opacity:.95; font-size:.72em; transform:translateY(-.6em); } .number.wrong { animation:shake .35s; background:#ffd7d7; } .number:disabled { cursor:default; }
-    @keyframes shake { 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
-    .question-card { display:flex; flex-direction:column; justify-content:center; min-height:450px; padding:23px; text-align:center; border:4px solid var(--yellow); }
-    .turn { margin:0 auto 13px; padding:8px 14px; border-radius:999px; background:#fff4bd; color:#785c00; font-weight:900; } .equation { font-size:clamp(3.6rem,8vw,7rem); font-weight:900; letter-spacing:.03em; line-height:1; } .instruction { min-height:3.2em; margin:20px 0 0; color:var(--muted); font-size:1.08rem; font-weight:800; line-height:1.55; }
-    .round { margin-top:12px; color:#789; font-weight:800; } .bingo-alert { margin-top:22px; min-height:1.6em; color:#de8710; font-size:1.35rem; font-weight:900; }
-    .controls { display:flex; justify-content:center; gap:9px; flex-wrap:wrap; margin-top:20px; }
-    .completion-board { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 18px; }
-    .completion { display:flex; align-items:center; justify-content:center; min-height:54px; padding:10px 16px; border-radius:17px; border:3px solid var(--team); background:rgba(255,253,246,.94); color:#64758a; font-size:1.05rem; font-weight:900; box-shadow:0 5px 13px rgba(27,81,114,.1); }
-    .completion.done { background:color-mix(in srgb,var(--team) 14%,white); color:var(--ink); } .completion.correct { background:color-mix(in srgb,var(--team) 22%,white); } .completion.skipped { border-style:dashed; }
-    .skip-wrap { padding:0 15px 17px; } .skip { width:100%; padding:12px; border:2px dashed var(--team); border-radius:13px; background:white; color:var(--team); font-weight:900; } .skip:hover:not(:disabled) { background:color-mix(in srgb,var(--team) 10%,white); } .skip:disabled { cursor:default; opacity:.5; }
-    .winner { color:#d77c00; font-size:clamp(2rem,5vw,3rem); font-weight:900; } .final-score { color:var(--muted); font-size:1.15rem; line-height:1.7; }
-    @media (max-width:900px) { .arena { grid-template-columns:1fr 1fr; } .question-card { grid-column:1 / -1; grid-row:1; min-height:250px; } .equation { font-size:clamp(3.8rem,12vw,6rem); } }
-    @media (max-width:560px) { .app { width:min(96vw,500px); } header { align-items:flex-start; } .header-note { display:none; } .top-actions .secondary { padding:10px; font-size:.9rem; } .timer { min-width:76px; font-size:1.1rem; } .arena, .completion-board { grid-template-columns:1fr; } .question-card { grid-column:auto; } .setup-grid { grid-template-columns:1fr; } .team-card.active { transform:none; } }
+    .setup, .finish { width:min(720px,100%); margin:5vh auto; padding:clamp(22px,4vw,38px); text-align:center; color:#fff; border:5px solid #0a132a; outline:4px solid var(--gold); outline-offset:-11px; border-radius:4px; background:linear-gradient(135deg,#183e78,#0a1d45); box-shadow:10px 10px 0 rgba(7,20,44,.45),inset 0 0 0 4px #426fa8; }
+    h1,h2,p { margin-top:0; } h1 { margin-bottom:10px; color:#fff; font-size:clamp(2rem,5vw,3.55rem); letter-spacing:.06em; line-height:1.1; text-shadow:4px 4px 0 #0a132a,7px 7px 0 #d92731; } h2 { color:var(--gold-light); font-size:2rem; text-shadow:3px 3px 0 #0a132a; }
+    .lead { color:#e1efff; font-size:1.02rem; line-height:1.7; }
+    .setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:22px 0; text-align:left; } label { color:var(--gold-light); font-size:.93rem; font-weight:900; text-shadow:2px 2px #0a132a; }
+    input,select { display:block; width:100%; margin-top:7px; padding:11px; color:#171c2b; border:3px solid #0a132a; border-radius:3px; background:#fff6e4; box-shadow:inset 0 -3px #d7c6a3; }
+    .primary,.secondary { position:relative; border:4px solid #070b16; border-radius:3px; padding:12px 20px; color:#fff; font-weight:900; font-size:1.02rem; text-shadow:2px 2px #111; box-shadow:inset 0 0 0 3px #7b7b7b,4px 4px 0 #07142c; } .primary { background:#39404a; } .primary:hover { background:#515b67; } .secondary { background:#303947; } .secondary:hover { background:#465366; } .large { min-width:255px; padding:15px 28px; font-size:1.15rem; }
+    .rules { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:18px 0; } .rule { padding:7px 10px; color:#182743; border:2px solid #0a132a; border-radius:2px; background:var(--gold-light); font-size:.82rem; font-weight:900; box-shadow:2px 2px 0 #a66c12; }
+    .how-to-play { margin:19px 0 4px; padding:14px; text-align:left; border:3px solid #547fba; background:rgba(6,23,55,.72); } .how-to-play h2 { margin:0 0 12px; font-size:1.25rem; text-align:center; }
+    .key-guides { display:grid; grid-template-columns:1fr 1fr; gap:12px; } .key-guide { padding:12px; border:3px solid var(--team); border-radius:2px; background:#fff4dc; color:#17213a; box-shadow:inset 0 0 0 2px #111827; }
+    .key-guide strong { display:block; margin-bottom:7px; color:var(--team); font-size:1rem; } .key-guide p { margin:6px 0; line-height:1.5; }
+    kbd { display:inline-block; min-width:1.7em; padding:1px 5px; color:#fff; border:2px solid #111827; border-radius:2px; background:#4d5560; box-shadow:inset 0 -2px #252a30; font:inherit; font-weight:900; text-align:center; }
+    .other-controls,.mode-note { margin:11px 0 0; color:#d9ebff; font-size:.87rem; font-weight:700; text-align:center; line-height:1.55; } .mode-note { color:var(--gold-light); }
+    header { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:14px; padding:8px 13px; border:4px solid #0a132a; background:rgba(11,49,107,.86); box-shadow:inset 0 0 0 3px #4f83c5,4px 4px 0 rgba(7,20,44,.4); } header h1 { margin:0; font-size:clamp(1.5rem,3.2vw,2.6rem); } .header-note { margin:5px 0 0; color:#dcefff; font-weight:700; }
+    .top-actions { display:flex; align-items:center; gap:10px; } .timer { min-width:118px; padding:10px 14px; color:#fff; border:4px solid #0a132a; background:#15213b; box-shadow:inset 0 0 0 3px #8ca4c7; text-align:center; font-size:1.5rem; font-weight:900; text-shadow:3px 3px #000; }
+    .arena { display:grid; grid-template-columns:minmax(250px,1fr) minmax(290px,.82fr) minmax(250px,1fr); gap:clamp(14px,2vw,28px); align-items:stretch; }
+    .team-card,.question-card { position:relative; overflow:hidden; border:5px solid #0a132a; border-radius:4px; box-shadow:6px 7px 0 rgba(7,20,44,.42),inset 0 0 0 3px var(--team); } .team-card::before,.question-card::before { position:absolute; z-index:2; inset:5px; pointer-events:none; content:""; border:2px solid var(--gold); }
+    .team-card { background:linear-gradient(145deg,var(--team) 0 9%,#fff7e8 9% 100%); transition:transform .15s; } .team-card.active { transform:translateY(-5px); }
+    .team-header { display:flex; justify-content:space-between; align-items:center; min-height:65px; padding:13px 17px; color:#fff; background:var(--team); text-shadow:3px 3px #0a132a; } .team-title { font-size:clamp(1.05rem,2vw,1.42rem); font-weight:900; } .team-score { color:var(--gold-light); font-size:1.35rem; font-weight:900; }
+    .status { min-height:31px; padding:9px 15px 0; color:#30384a; font-weight:900; font-size:.88rem; }
+    .bingo-card { display:grid; gap:4px; padding:12px 14px 15px; } .bingo-card.grid-4 { grid-template-columns:repeat(4,1fr); } .bingo-card.grid-5 { grid-template-columns:repeat(5,1fr); }
+    .number { aspect-ratio:1; min-height:47px; color:#151923; border:3px solid #162039; border-radius:1px; background:#fff6e4; box-shadow:inset 0 -3px #c9bda7; font-weight:900; font-size:clamp(1rem,2vw,1.48rem); transition:.12s; } .number:hover:not(:disabled) { background:#fff; transform:translateY(-2px); }
+    .number.marked { position:relative; color:#fff; background:var(--team); box-shadow:inset 0 -4px rgba(0,0,0,.28); text-shadow:2px 2px #0a132a; } .number.marked::after { content:'✓'; position:absolute; inset:0; display:grid; place-items:center; font-size:1.7em; color:var(--gold-light); text-shadow:2px 2px #0a132a; } .number.marked span { opacity:.95; font-size:.72em; transform:translateY(-.6em); }
+    .number.wrong { animation:shake .35s; background:#ff9da1; } .number:disabled { cursor:default; } .number.cursor { position:relative; z-index:1; outline:4px solid var(--gold); outline-offset:-5px; box-shadow:0 0 0 4px #0a132a,inset 0 -3px 0 rgba(0,0,0,.18); } .number.cursor-paused { outline-style:dashed; opacity:.72; }
+    .key-help { padding:0 15px 8px; color:#33405a; font-size:.8rem; font-weight:900; line-height:1.5; } @keyframes shake { 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
+    .question-card { display:flex; flex-direction:column; justify-content:center; min-height:450px; padding:28px; color:#fff; border-color:#0a132a; background:#071f4b; box-shadow:6px 7px 0 rgba(7,20,44,.42),inset 0 0 0 4px #32588e; } .question-card::before { border-color:var(--gold); }
+    .turn { margin:0 auto 15px; padding:7px 13px; color:#13213d; border:3px solid #0a132a; border-radius:2px; background:var(--gold-light); box-shadow:2px 2px 0 #b57914; font-weight:900; } .equation { color:#fff; font-size:clamp(3.4rem,7vw,6.5rem); font-weight:900; letter-spacing:.03em; line-height:1; text-shadow:4px 4px #111827; } .equation.long { font-size:clamp(2.1rem,4.5vw,4.2rem); line-height:1.15; } .instruction { min-height:3.2em; margin:20px 0 0; color:#d7ebff; font-size:1rem; font-weight:800; line-height:1.55; }
+    .round { margin-top:12px; color:var(--gold-light); font-weight:900; } .bingo-alert { margin-top:22px; min-height:1.6em; color:var(--gold-light); font-size:1.25rem; font-weight:900; text-shadow:2px 2px #a0142c; }
+    .controls { display:flex; justify-content:center; gap:9px; flex-wrap:wrap; margin-top:20px; } .completion-board { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 18px; }
+    .completion { display:flex; align-items:center; justify-content:center; min-height:50px; padding:9px 14px; color:#fff; border:4px solid #0a132a; background:rgba(8,29,67,.9); box-shadow:inset 0 0 0 2px var(--team); font-size:.98rem; font-weight:900; text-shadow:2px 2px #07142c; } .completion.done { color:var(--gold-light); } .completion.correct { background:color-mix(in srgb,var(--team) 55%,#071f4b); } .completion.skipped { border-style:dashed; }
+    .skip-wrap { padding:0 15px 16px; } .skip { width:100%; padding:11px; color:#fff; border:3px solid #0a132a; border-radius:2px; background:#39404a; box-shadow:inset 0 0 0 2px var(--team); font-weight:900; text-shadow:2px 2px #111; } .skip:hover:not(:disabled) { background:#505c6a; } .skip:disabled { cursor:default; opacity:.55; }
+    .winner { color:var(--gold-light); font-size:clamp(2rem,5vw,3rem); font-weight:900; text-shadow:4px 4px #a3192c,7px 7px #0a132a; } .final-score { color:#dcecff; font-size:1.15rem; line-height:1.7; }
+    @media (max-width:900px) { .arena { grid-template-columns:1fr 1fr; } .question-card { grid-column:1 / -1; grid-row:1; min-height:245px; } .equation { font-size:clamp(3.8rem,12vw,6rem); } }
+    @media (max-width:560px) { .app { width:min(96vw,500px); } header { align-items:flex-start; } .header-note { display:none; } .top-actions .secondary { padding:9px; font-size:.82rem; } .timer { min-width:70px; font-size:1.1rem; } .arena,.completion-board,.key-guides { grid-template-columns:1fr; } .question-card { grid-column:auto; } .setup-grid { grid-template-columns:1fr; } .team-card.active { transform:none; } }
   </style>
 </head>
 <body>
   <main class="app">
     <section id="setup" class="setup">
       <h1>🎯 數學賓果大激鬥</h1>
-      <p class="lead">兩隊同時解答同一條 1–10 乘法題。找出答案並按在自己的賓果卡上；找不到便按「跳過此題」，率先連成一線就贏！</p>
+      <p class="lead">選擇與電腦對戰，或讓兩人在同一部電腦上比賽。兩邊同時解答數學題，率先連成一線就贏！</p>
       <div class="rules"><span class="rule">每題自動生成</span><span class="rule">兩隊同步作答</span><span class="rule">橫、直、斜線都算賓果</span></div>
+      <section class="how-to-play" aria-label="操作指引">
+        <h2>⌨️ 操作指引</h2>
+        <div class="key-guides">
+          <div class="key-guide" style="--team:#e65362"><strong>玩家 1／左邊紅色棋盤</strong><p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> 移動游標</p><p><kbd>F</kbd> 確認答案　<kbd>G</kbd> 跳過</p></div>
+          <div class="key-guide" style="--team:#2589d7"><strong id="player2GuideTitle">電腦／右邊藍色棋盤</strong><p id="player2GuideControls">電腦會在設定時間內自動選答案；卡上沒有答案便跳過。</p></div>
+        </div>
+        <p id="otherControls" class="other-controls">你可用滑鼠／觸控點選左邊棋盤。答對或跳過後，等待電腦完成本題。</p>
+      </section>
       <div class="setup-grid">
+        <label>對戰模式<select id="versusMode"><option value="computer" selected>單人對電腦</option><option value="local">同機雙人</option></select></label>
+        <label id="difficultyWrap">電腦難度<select id="aiDifficulty"><option value="easy">容易</option><option value="normal" selected>普通</option><option value="hard">困難</option></select></label>
         <label>第一隊名稱<input id="team1Name" maxlength="12" value="第一隊"></label>
-        <label>第二隊名稱<input id="team2Name" maxlength="12" value="第二隊"></label>
+        <label id="team2NameWrap" class="hidden">第二隊名稱<input id="team2Name" maxlength="12" value="第二隊"></label>
+        <label>題目範圍<select id="questionMode"><option value="addition">加法（三位數以內）</option><option value="subtraction">減法（三位數以內）</option><option value="multiplication" selected>乘法（1–10）</option><option value="division">除法（被除數 100 以內）</option><option value="mixed">混合問題（加、減、乘、除）</option></select></label>
         <label>答案卡大小<select id="cardSize"><option value="4">4 × 4（快速）</option><option value="5" selected>5 × 5（標準）</option></select></label>
         <label>限時<select id="duration"><option value="180">3 分鐘</option><option value="300" selected>5 分鐘</option><option value="600">10 分鐘</option></select></label>
       </div>
+      <p id="aiTimingHint" class="mode-note">普通難度：乘除法 15 秒內；加減法及混合問題 20 秒內。</p>
       <button id="start" class="primary large">開始大激鬥</button>
     </section>
 
@@ -67,9 +81,9 @@
       <header><div><h1>🎯 數學賓果大激鬥</h1><p class="header-note">兩隊同時作答；兩隊完成本題後才會顯示下一題。</p></div><div class="top-actions"><div id="timer" class="timer">5:00</div><button id="fullscreen" class="secondary" aria-pressed="false">⛶ 全螢幕</button><button id="restart" class="secondary">重新開始</button></div></header>
       <section class="completion-board" aria-label="本題完成狀態"><div id="progress0" class="completion" style="--team:#e65362"></div><div id="progress1" class="completion" style="--team:#2589d7"></div></section>
       <section class="arena" aria-label="遊戲區">
-        <article id="team0Card" class="team-card" style="--team:#e65362"><div class="team-header"><span id="team0Title" class="team-title">第一隊答案卡</span><span id="score0" class="team-score">0 分</span></div><div id="status0" class="status"></div><div id="board0" class="bingo-card"></div><div class="skip-wrap"><button id="skip0" class="skip" style="--team:#e65362">找不到答案／跳過此題</button></div></article>
+        <article id="team0Card" class="team-card" style="--team:#e65362"><div class="team-header"><span id="team0Title" class="team-title">第一隊答案卡</span><span id="score0" class="team-score">0 分</span></div><div id="status0" class="status"></div><div id="board0" class="bingo-card"></div><div class="key-help">鍵盤：W A S D 移動 · F 確認 · G 跳過</div><div class="skip-wrap"><button id="skip0" class="skip" style="--team:#e65362">找不到答案／跳過此題</button></div></article>
         <section class="question-card" aria-live="polite"><div id="turn" class="turn">兩隊同時作答</div><div id="equation" class="equation">7 × 8</div><p id="instruction" class="instruction">在自己的答案卡找出正確答案；找不到時，按答案卡下方的跳過按鈕。</p><div id="round" class="round"></div><div id="bingoAlert" class="bingo-alert"></div></section>
-        <article id="team1Card" class="team-card" style="--team:#2589d7"><div class="team-header"><span id="team1Title" class="team-title">第二隊答案卡</span><span id="score1" class="team-score">0 分</span></div><div id="status1" class="status"></div><div id="board1" class="bingo-card"></div><div class="skip-wrap"><button id="skip1" class="skip" style="--team:#2589d7">找不到答案／跳過此題</button></div></article>
+        <article id="team1Card" class="team-card" style="--team:#2589d7"><div class="team-header"><span id="team1Title" class="team-title">電腦答案卡</span><span id="score1" class="team-score">0 分</span></div><div id="status1" class="status"></div><div id="board1" class="bingo-card"></div><div id="team1Help" class="key-help">電腦會自動作答</div><div class="skip-wrap"><button id="skip1" class="skip" style="--team:#2589d7">找不到答案／跳過此題</button></div></article>
       </section>
       <div class="controls"><button id="end" class="secondary">結束遊戲</button></div>
     </section>
@@ -80,47 +94,188 @@
     const $ = id => document.getElementById(id);
     const colors = ['#e65362', '#2589d7'];
     const allProducts = [...new Set(Array.from({length:10}, (_,a) => Array.from({length:10}, (_,b) => (a+1)*(b+1))).flat())];
-    let teams, size, seconds, timer, nextQuestionTimer, usedQuestions, question, gameOver, questionCount;
+    const threeDigitAnswers = Array.from({length:999}, (_,index) => index + 1);
+    const divisionAnswers = Array.from({length:100}, (_,index) => index + 1);
+    const modeLabels = {addition:'加法', subtraction:'減法', multiplication:'乘法', division:'除法', mixed:'混合問題'};
+    const aiLimits = {easy:{short:20,long:25}, normal:{short:15,long:20}, hard:{short:10,long:15}};
+    const difficultyLabels = {easy:'容易', normal:'普通', hard:'困難'};
+    let teams, size, seconds, timer, nextQuestionTimer, bingoTimer, aiTimer, aiPreviewTimer, usedQuestions, question, gameOver, bingoPending, questionCount, questionMode, cardAnswers, versusMode, aiDifficulty, gameSession = 0;
     const shuffle = list => [...list].sort(() => Math.random() - .5);
     const formatTime = n => `${Math.floor(Math.max(0,n)/60)}:${String(Math.max(0,n)%60).padStart(2,'0')}`;
 
-    function makeCard() { return shuffle(allProducts).slice(0, size * size).map(value => ({value, marked:false})); }
+    function answersForMode(mode) {
+      if (mode === 'multiplication') return allProducts;
+      if (mode === 'division') return divisionAnswers;
+      return threeDigitAnswers;
+    }
+    function computerMode() { return versusMode === 'computer'; }
+    function updateSetupMode() {
+      const computer = $('versusMode').value === 'computer';
+      $('difficultyWrap').classList.toggle('hidden', !computer);
+      $('team2NameWrap').classList.toggle('hidden', computer);
+      $('aiTimingHint').classList.toggle('hidden', !computer);
+      $('player2GuideTitle').textContent = computer ? '電腦／右邊藍色棋盤' : '玩家 2／右邊藍色棋盤';
+      $('player2GuideControls').innerHTML = computer ? '電腦會在設定時間內自動選答案；卡上沒有答案便跳過。' : '<kbd>↑</kbd> <kbd>←</kbd> <kbd>↓</kbd> <kbd>→</kbd> 移動游標<br><kbd>Enter</kbd> 確認答案　<kbd>右 Shift</kbd> 跳過';
+      $('otherControls').textContent = computer ? '你可用滑鼠／觸控點選左邊棋盤。答對或跳過後，等待電腦完成本題。' : '兩人可同時操作；答對或跳過後，該玩家游標會暫停至下一題。也可用滑鼠／觸控點選答案及跳過按鈕。';
+      const limits = aiLimits[$('aiDifficulty').value];
+      $('aiTimingHint').textContent = `${difficultyLabels[$('aiDifficulty').value]}難度：乘除法 ${limits.short} 秒內；加減法及混合問題 ${limits.long} 秒內。`;
+    }
+    function makeCard() { return shuffle(cardAnswers).slice(0, size * size).map(value => ({value, marked:false})); }
     function drawBoard(index) {
       const board = $(`board${index}`); board.className = `bingo-card grid-${size}`;
-      const locked = gameOver || teams[index].result !== 'pending';
-      board.innerHTML = teams[index].card.map((item, position) => `<button class="number ${item.marked ? 'marked' : ''}" style="--team:${colors[index]}" data-position="${position}" ${locked ? 'disabled' : ''} aria-label="答案 ${item.value}"><span>${item.value}</span></button>`).join('');
-      board.querySelectorAll('button').forEach(button => button.addEventListener('click', () => chooseAnswer(index, Number(button.dataset.position), button)));
+      const paused = gameOver || bingoPending || teams[index].result !== 'pending';
+      const locked = paused || (computerMode() && index === 1);
+      board.innerHTML = teams[index].card.map((item, position) => {
+        const selected = position === teams[index].selectedPosition;
+        return `<button class="number ${item.marked ? 'marked' : ''} ${selected ? 'cursor' : ''} ${selected && paused ? 'cursor-paused' : ''}" style="--team:${colors[index]}" data-position="${position}" ${locked ? 'disabled' : ''} aria-label="答案 ${item.value}${selected ? '，鍵盤游標' : ''}"><span>${item.value}</span></button>`;
+      }).join('');
+      board.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+        if (computerMode() && index === 1) return;
+        teams[index].selectedPosition = Number(button.dataset.position);
+        showCursor(index);
+        chooseAnswer(index, teams[index].selectedPosition, button);
+      }));
+    }
+    function showCursor(index) {
+      $(`board${index}`).querySelectorAll('.number').forEach((button, position) => {
+        const selected = position === teams[index].selectedPosition;
+        button.classList.toggle('cursor', selected);
+        button.classList.toggle('cursor-paused', selected && (gameOver || bingoPending || teams[index].result !== 'pending'));
+        button.setAttribute('aria-label', `答案 ${teams[index].card[position].value}${selected ? '，鍵盤游標' : ''}`);
+      });
+    }
+    function moveCursor(index, rowChange, columnChange) {
+      const position = teams[index].selectedPosition;
+      const row = Math.max(0, Math.min(size - 1, Math.floor(position / size) + rowChange));
+      const column = Math.max(0, Math.min(size - 1, position % size + columnChange));
+      teams[index].selectedPosition = row * size + column;
+      showCursor(index);
+    }
+    function onKeyboard(event) {
+      if ($('game').classList.contains('hidden') || gameOver || bingoPending || event.altKey || event.ctrlKey || event.metaKey) return;
+      const controls = {
+        KeyW:[0,-1,0], KeyS:[0,1,0], KeyA:[0,0,-1], KeyD:[0,0,1], KeyF:[0,'choose'], KeyG:[0,'skip'],
+        ArrowUp:[1,-1,0], ArrowDown:[1,1,0], ArrowLeft:[1,0,-1], ArrowRight:[1,0,1], Enter:[1,'choose'], ShiftRight:[1,'skip']
+      };
+      const action = controls[event.code];
+      if (!action) return;
+      if (computerMode() && action[0] === 1) return;
+      event.preventDefault();
+      const index = action[0];
+      if (teams[index].result !== 'pending') return;
+      if (action[1] === 'choose') {
+        if (event.repeat) return;
+        const position = teams[index].selectedPosition;
+        chooseAnswer(index, position, $(`board${index}`).querySelector(`[data-position="${position}"]`));
+      } else if (action[1] === 'skip') {
+        if (!event.repeat) skipQuestion(index);
+      } else {
+        moveCursor(index, action[1], action[2]);
+      }
+    }
+    function clearComputerTimers() {
+      clearTimeout(aiTimer);
+      clearTimeout(aiPreviewTimer);
+      aiTimer = undefined;
+      aiPreviewTimer = undefined;
+    }
+    function computerDelayMs() {
+      const shortQuestion = questionMode === 'multiplication' || questionMode === 'division';
+      const limitSeconds = aiLimits[aiDifficulty][shortQuestion ? 'short' : 'long'];
+      return Math.floor((0.5 + Math.random() * 0.5) * limitSeconds * 1000);
+    }
+    function scheduleComputerTurn() {
+      if (!computerMode()) return;
+      const session = gameSession;
+      const currentQuestion = question;
+      const target = teams[1].card.findIndex(item => !item.marked && item.value === currentQuestion.answer);
+      const stillCurrent = () => !gameOver && !bingoPending && gameSession === session && question === currentQuestion && teams[1].result === 'pending';
+      const delay = computerDelayMs();
+      if (target !== -1) {
+        aiPreviewTimer = setTimeout(() => {
+          if (!stillCurrent()) return;
+          teams[1].selectedPosition = target;
+          showCursor(1);
+        }, Math.max(0, delay - 600));
+      }
+      aiTimer = setTimeout(() => {
+        if (!stillCurrent()) return;
+        if (target === -1) {
+          skipQuestion(1);
+        } else {
+          teams[1].selectedPosition = target;
+          chooseAnswer(1, target, $(`board1`).querySelector(`[data-position="${target}"]`));
+        }
+      }, delay);
     }
     function updateChrome() {
       [0,1].forEach(i => {
         const team = teams[i];
-        $(`team${i}Card`).classList.toggle('active', team.result === 'pending' && !gameOver);
+        $(`team${i}Card`).classList.toggle('active', team.result === 'pending' && !gameOver && !bingoPending);
         $(`score${i}`).textContent = `${teams[i].score} 分`;
         const resultText = team.result === 'correct' ? '✓ 已答對' : team.result === 'skipped' ? '↷ 已跳過此題' : '● 正在作答';
         $(`status${i}`).textContent = gameOver ? '' : resultText;
         const progress = $(`progress${i}`);
         progress.className = `completion ${team.result === 'pending' ? '' : 'done'} ${team.result}`;
         progress.textContent = `${team.name}：${resultText}`;
-        $(`skip${i}`).disabled = gameOver || team.result !== 'pending';
+        $(`skip${i}`).disabled = gameOver || bingoPending || team.result !== 'pending' || (computerMode() && i === 1);
         drawBoard(i);
       });
-      $('turn').textContent = gameOver ? '本局完成' : teams.every(team => team.result !== 'pending') ? '兩隊已完成本題' : '兩隊同時作答';
+      $('turn').textContent = gameOver ? '本局完成' : teams.every(team => team.result !== 'pending') ? '兩隊已完成本題' : computerMode() ? '你與電腦同時作答' : '兩隊同時作答';
       $('timer').textContent = formatTime(seconds);
+    }
+    function unmarkedAnswers(filter = () => true) {
+      return [...new Set(teams.flatMap(team => team.card.filter(item => !item.marked).map(item => item.value)).filter(filter))];
+    }
+    function randomFrom(values) { return values[Math.floor(Math.random() * values.length)]; }
+    function additionQuestion(answer) {
+      const first = answer === 1 ? 1 : 1 + Math.floor(Math.random() * (answer - 1));
+      const second = answer - first;
+      return {answer, expression:`${first} + ${second}`, key:`${first}+${second}`};
+    }
+    function subtractionQuestion(answer) {
+      const second = Math.floor(Math.random() * (1000 - answer));
+      const first = answer + second;
+      return {answer, expression:`${first} − ${second}`, key:`${first}-${second}`};
+    }
+    function multiplicationQuestion(answer) {
+      const factors = [];
+      for (let first=1; first<=10; first++) for (let second=1; second<=10; second++) if (first * second === answer) factors.push([first, second]);
+      const [first, second] = randomFrom(factors);
+      return {answer, expression:`${first} × ${second}`, key:`${first}*${second}`};
+    }
+    function divisionQuestion(answer) {
+      const divisor = 1 + Math.floor(Math.random() * Math.floor(100 / answer));
+      const dividend = answer * divisor;
+      return {answer, expression:`${dividend} ÷ ${divisor}`, key:`${dividend}/${divisor}`};
+    }
+    function makeQuestion(mode) {
+      const operations = mode === 'mixed' ? ['addition', 'subtraction', 'multiplication', 'division'] : [mode];
+      for (let attempt=0; attempt<120; attempt++) {
+        const operation = randomFrom(operations);
+        const candidates = operation === 'multiplication' ? unmarkedAnswers(value => allProducts.includes(value)) : operation === 'division' ? unmarkedAnswers(value => value <= 100) : unmarkedAnswers();
+        if (!candidates.length) continue;
+        const answer = randomFrom(candidates);
+        const generators = {addition:additionQuestion, subtraction:subtractionQuestion, multiplication:multiplicationQuestion, division:divisionQuestion};
+        const candidate = generators[operation](answer);
+        if (!usedQuestions.has(candidate.key)) return candidate;
+      }
+      usedQuestions.clear();
+      return makeQuestion(mode);
     }
     function newQuestion(message = '在自己的答案卡找出正確答案；找不到時，按答案卡下方的跳過按鈕。') {
       clearTimeout(nextQuestionTimer);
-      const pairs = [];
-      for (let a=1; a<=10; a++) for (let b=1; b<=10; b++) pairs.push({a,b,key:`${a}×${b}`,answer:a*b});
-      let freshPairs = pairs.filter(pair => !usedQuestions.has(pair.key));
-      if (!freshPairs.length) { usedQuestions.clear(); freshPairs = pairs; }
-      const picked = freshPairs[Math.floor(Math.random() * freshPairs.length)];
+      clearComputerTimers();
+      const picked = makeQuestion(questionMode);
       usedQuestions.add(picked.key); question = picked; questionCount++;
       teams.forEach(team => { team.result = 'pending'; });
-      $('equation').textContent = `${question.a} × ${question.b}`;
+      $('equation').textContent = question.expression;
+      $('equation').classList.toggle('long', question.expression.length >= 7);
       $('instruction').textContent = message;
-      $('round').textContent = `第 ${questionCount} 題`;
+      $('round').textContent = `第 ${questionCount} 題 · ${modeLabels[questionMode]}`;
       $('bingoAlert').textContent = '';
       updateChrome();
+      scheduleComputerTurn();
     }
     function bingoLines(card) {
       const lines = [];
@@ -131,11 +286,11 @@
       return lines.filter(line => line.every(position => card[position].marked)).length;
     }
     function chooseAnswer(index, position, button) {
-      if (gameOver || teams[index].result !== 'pending' || teams[index].card[position].marked) return;
+      if (gameOver || bingoPending || teams[index].result !== 'pending' || teams[index].card[position].marked) return;
       const item = teams[index].card[position];
       if (item.value !== question.answer) {
         button.classList.add('wrong');
-        $('instruction').textContent = `這不是答案，再想想！${question.a} × ${question.b} = ?`;
+        $('instruction').textContent = `這不是答案，再想想！${question.expression} = ?`;
         setTimeout(() => button.classList.remove('wrong'), 450);
         return;
       }
@@ -143,19 +298,29 @@
       teams[index].score += 10;
       teams[index].result = 'correct';
       const lines = bingoLines(teams[index].card);
-      if (lines) { $('bingoAlert').textContent = `🎉 賓果！${teams[index].name} 連成 ${lines} 條線！`; updateChrome(); setTimeout(() => finish(index), 1100); return; }
+      if (lines) {
+        bingoPending = true;
+        clearInterval(timer);
+        clearComputerTimers();
+        clearTimeout(nextQuestionTimer);
+        $('bingoAlert').textContent = `🎉 賓果！${teams[index].name} 連成 ${lines} 條線！`;
+        updateChrome();
+        bingoTimer = setTimeout(() => finish(index), 1100);
+        return;
+      }
       $('instruction').textContent = `${teams[index].name} 答對！等待另一隊完成本題。`;
       updateChrome();
       completeQuestion();
     }
     function skipQuestion(index) {
-      if (gameOver || teams[index].result !== 'pending') return;
+      if (gameOver || bingoPending || teams[index].result !== 'pending') return;
       teams[index].result = 'skipped';
       $('instruction').textContent = `${teams[index].name} 已跳過此題。等待另一隊完成本題。`;
       updateChrome();
       completeQuestion();
     }
     function completeQuestion() {
+      if (bingoPending) return;
       if (!teams.every(team => team.result !== 'pending')) return;
       $('instruction').textContent = '兩隊都已完成本題，下一題即將出現。';
       updateChrome();
@@ -163,7 +328,7 @@
     }
     function finish(winnerIndex) {
       if (gameOver) return;
-      gameOver = true; clearInterval(timer); clearTimeout(nextQuestionTimer); updateChrome();
+      gameOver = true; clearInterval(timer); clearTimeout(nextQuestionTimer); clearTimeout(bingoTimer); clearComputerTimers(); updateChrome();
       $('game').classList.add('hidden'); $('finish').classList.remove('hidden');
       const high = Math.max(...teams.map(t => t.score)); const leaders = teams.filter(t => t.score === high);
       $('winner').textContent = winnerIndex !== undefined ? `${teams[winnerIndex].name} 賓果勝出！` : leaders.length === 2 ? '平手！兩隊都很厲害。' : `${leaders[0].name} 分數最高！`;
@@ -181,16 +346,23 @@
       try { await action.call(active ? document : document.documentElement); } catch (_) { /* Browser denied full-screen mode. */ }
     }
     function start() {
-      size = Number($('cardSize').value); seconds = Number($('duration').value); usedQuestions = new Set(); questionCount = 0; gameOver = false;
-      teams = [{name:$('team1Name').value.trim() || '第一隊', score:0, card:makeCard(), result:'pending'}, {name:$('team2Name').value.trim() || '第二隊', score:0, card:makeCard(), result:'pending'}];
+      clearComputerTimers(); clearTimeout(bingoTimer); clearTimeout(nextQuestionTimer); gameSession++;
+      size = Number($('cardSize').value); seconds = Number($('duration').value); questionMode = $('questionMode').value; cardAnswers = answersForMode(questionMode); versusMode = $('versusMode').value; aiDifficulty = $('aiDifficulty').value; usedQuestions = new Set(); questionCount = 0; gameOver = false; bingoPending = false;
+      teams = [{name:$('team1Name').value.trim() || '第一隊', score:0, card:makeCard(), result:'pending', selectedPosition:0}, {name:computerMode() ? '電腦' : $('team2Name').value.trim() || '第二隊', score:0, card:makeCard(), result:'pending', selectedPosition:0}];
       $('team0Title').textContent = `${teams[0].name}答案卡`; $('team1Title').textContent = `${teams[1].name}答案卡`;
+      $('team1Help').textContent = computerMode() ? '電腦會自動作答；右邊棋盤不能手動操作' : '鍵盤：方向鍵移動 · Enter 確認 · 右 Shift 跳過';
+      document.querySelector('.header-note').textContent = computerMode() ? '你與電腦同時作答；雙方完成本題後才顯示下一題。' : '兩隊同時作答；兩隊完成本題後才會顯示下一題。';
       $('setup').classList.add('hidden'); $('finish').classList.add('hidden'); $('game').classList.remove('hidden');
       clearInterval(timer); newQuestion(); timer = setInterval(() => { seconds--; updateChrome(); if (seconds <= 0) finish(); }, 1000);
     }
+    $('versusMode').addEventListener('change', updateSetupMode);
+    $('aiDifficulty').addEventListener('change', updateSetupMode);
+    updateSetupMode();
     $('start').addEventListener('click', start); $('playAgain').addEventListener('click', () => { $('finish').classList.add('hidden'); $('setup').classList.remove('hidden'); });
     $('restart').addEventListener('click', () => { if (confirm('確定重新開始本局？')) start(); }); $('end').addEventListener('click', () => finish());
-    $('skip0').addEventListener('click', () => skipQuestion(0)); $('skip1').addEventListener('click', () => skipQuestion(1));
+    $('skip0').addEventListener('click', () => skipQuestion(0)); $('skip1').addEventListener('click', () => { if (!computerMode()) skipQuestion(1); });
     $('fullscreen').addEventListener('click', toggleFullscreen);
+    document.addEventListener('keydown', onKeyboard);
     document.addEventListener('fullscreenchange', updateFullscreenButton); document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
   </script>
 </body>
