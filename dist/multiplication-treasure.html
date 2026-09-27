@@ -45,8 +45,8 @@
     .mode-option input:checked+span{background:#fff0bd;border-color:#c5871c;color:#62410b}
     .mode-option input:focus-visible+span{outline:4px solid #ffce52;outline-offset:3px}
     #modeDescription{margin:10px 0 0;color:var(--muted);font-size:.95rem;line-height:1.5}
-    .question.long,html:fullscreen .question.long{font-size:1.85rem;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
-    @media(max-width:620px){.mode-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    .question.long,html.game-fit .question.long{font-size:1.85rem;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+
     .setup-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     label{display:block;font-weight:900}
     label span{display:block;margin-bottom:7px}
@@ -122,30 +122,29 @@
     .end-scores{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:24px 0}
     .end-score{padding:16px;border-radius:15px;background:#eef7f5;font-weight:900}
     .end-score strong{display:block;margin-top:3px;font-size:2rem}
-    @media(max-width:1000px){.play-grid{grid-template-columns:1fr}.question-card{min-height:0}.waiting-message{min-height:120px}.topbar{align-items:center}}
-    @media(max-width:620px){.shell{width:min(100% - 20px,560px);padding-top:12px}.setup{margin:0}.setup-hero{padding:27px 23px}.setup-body{padding:23px}.howto{grid-template-columns:1fr;gap:7px}.step{display:flex;align-items:center;gap:10px;padding:10px 12px}.step strong{flex:none;margin:0}.setup-grid{grid-template-columns:1fr}.rules{grid-template-columns:repeat(3,1fr)}.setup-actions{align-items:stretch;flex-direction:column}.setup-actions .button{width:100%}.topbar{align-items:stretch;flex-direction:column;gap:12px}.top-controls{justify-content:space-between}.top-controls .button{padding:9px 12px}.clock{margin-left:auto}.scoreboard{gap:8px}.team{padding:11px 12px}.team-name{font-size:.96rem}.team-score{font-size:1.7rem}.team-meta{font-size:.76rem}.status{padding:12px 14px}.status-icon{font-size:1.6rem}.question-card,.map-card{padding:16px}.question{min-height:115px;font-size:clamp(2.8rem,11vw,4.4rem)}.answer{min-height:66px}.board{gap:6px}.tile{border-radius:10px}.map-note{flex-direction:column;align-items:flex-start}.game-actions{justify-content:stretch}.game-actions .button{flex:1}.end{margin-top:2vh;padding:25px}}
-    html:fullscreen,html:fullscreen body{height:100%;overflow:hidden}
-    html:fullscreen .shell{position:fixed;left:50%;top:50%;display:flow-root;width:1280px;max-width:none;margin:0;padding:0;transform:translate(-50%,-50%) scale(var(--fullscreen-scale,1));transform-origin:center center}
-    html:fullscreen .play-grid{grid-template-columns:minmax(285px,1fr) minmax(360px,1.12fr) minmax(285px,1fr)}
-    html:fullscreen .question-card{min-height:420px;padding:20px}
-    html:fullscreen .waiting-message{min-height:315px}
-    html:fullscreen .topbar{align-items:flex-start;flex-direction:row;gap:20px}
-    html:fullscreen .top-controls{justify-content:flex-end}
-    html:fullscreen .scoreboard{gap:14px}
-    html:fullscreen .team{padding:16px 20px}
-    html:fullscreen .team-name{font-size:1.12rem}
-    html:fullscreen .team-score{font-size:2.1rem}
-    html:fullscreen .team-meta{font-size:.9rem}
-    html:fullscreen .status{padding:16px 22px}
-    html:fullscreen .question-card,html:fullscreen .map-card{padding:20px}
-    html:fullscreen .question{min-height:155px;font-size:clamp(2.35rem,3.5vw,2.9rem)}
-    html:fullscreen .answer{min-height:75px}
-    html:fullscreen .board{gap:9px}
-    html:fullscreen .map-note{flex-direction:row;align-items:center}
-    html:fullscreen .game-actions{justify-content:flex-end}
-    html:fullscreen .game-actions .button{flex:none}
+
+
+    html.game-fit .play-grid{grid-template-columns:minmax(285px,1fr) minmax(360px,1.12fr) minmax(285px,1fr)}
+    html.game-fit .question-card{min-height:420px;padding:20px}
+    html.game-fit .waiting-message{min-height:315px}
+    html.game-fit .topbar{align-items:flex-start;flex-direction:row;gap:20px}
+    html.game-fit .top-controls{justify-content:flex-end}
+    html.game-fit .scoreboard{gap:14px}
+    html.game-fit .team{padding:16px 20px}
+    html.game-fit .team-name{font-size:1.12rem}
+    html.game-fit .team-score{font-size:2.1rem}
+    html.game-fit .team-meta{font-size:.9rem}
+    html.game-fit .status{padding:16px 22px}
+    html.game-fit .question-card,html.game-fit .map-card{padding:20px}
+    html.game-fit .question{min-height:155px;font-size:clamp(2.35rem,3.5vw,2.9rem)}
+    html.game-fit .answer{min-height:75px}
+    html.game-fit .board{gap:9px}
+    html.game-fit .map-note{flex-direction:row;align-items:center}
+    html.game-fit .game-actions{justify-content:flex-end}
+    html.game-fit .game-actions .button{flex:none}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
   </style>
+  <link rel="stylesheet" href="./game-viewport.css">
 </head>
 <body>
   <main class="shell">
@@ -209,6 +208,7 @@
 
     <section id="finished" class="end card hidden" aria-labelledby="endHeading"><div class="end-icon">🏆</div><span class="eyebrow">尋寶完成</span><h2 id="endHeading">遊戲結束</h2><div id="winner" class="winner"></div><div id="finalScores" class="end-scores"></div><button id="playAgain" class="button primary">再玩一次 →</button></section>
   </main>
+  <script src="./game-viewport.js"></script>
   <script>
     const $ = id => document.getElementById(id);
     let questionMode='multiplication';
@@ -216,20 +216,8 @@
     const colors = ['#ec6b58','#3686bc'];
     let teams = [], current = 0, question, used = new Set(), boardEvents = [], phase = 'setup';
     let remainingSeconds = 600, interval = null, paused = false, extraTurn = false;
-    let fullscreenFitFrame = null;
     const panel = (part,team=current) => $(`${part}${team}`);
-    function fitFullscreen(){
-      if(!document.fullscreenElement)return;
-      const shell=document.querySelector('.shell');
-      const width=shell.offsetWidth,height=Math.max(shell.scrollHeight,shell.offsetHeight);
-      const scale=Math.max(.1,Math.min((window.innerWidth-24)/width,(window.innerHeight-24)/height));
-      shell.style.setProperty('--fullscreen-scale',String(scale));
-    }
-    function scheduleFullscreenFit(){
-      if(!document.fullscreenElement)return;
-      if(fullscreenFitFrame!==null)cancelAnimationFrame(fullscreenFitFrame);
-      fullscreenFitFrame=requestAnimationFrame(()=>{fullscreenFitFrame=null;fitFullscreen();});
-    }
+    function scheduleFullscreenFit(){window.GameViewport.schedule();}
     const randomInt = (min,max) => Math.floor(Math.random() * (max-min+1)) + min;
     function shuffle(items){const copy=[...items];for(let i=copy.length-1;i>0;i--){const j=randomInt(0,i);[copy[i],copy[j]]=[copy[j],copy[i]];}return copy;}
     function setStatus(kind,icon,kicker,title,detail=''){$('status').dataset.kind=kind;$('statusIcon').textContent=icon;$('statusKicker').textContent=kicker;$('statusTitle').textContent=title;$('statusDetail').textContent=detail;scheduleFullscreenFit();}
@@ -332,7 +320,7 @@
     $('end').addEventListener('click',()=>{if(confirm('確定現在結束遊戲並查看結果？'))finish();});
     $('playAgain').addEventListener('click',()=>{$('finished').classList.add('hidden');$('setup').classList.remove('hidden');$('start').focus();scheduleFullscreenFit();});
     $('fullscreen').addEventListener('click',toggleFullscreen);
-    document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'⛶ 離開全螢幕':'⛶ 全螢幕';if(document.fullscreenElement)scheduleFullscreenFit();else document.querySelector('.shell').style.removeProperty('--fullscreen-scale');});
+    document.addEventListener('fullscreenchange',()=>{$('fullscreen').textContent=document.fullscreenElement?'⛶ 離開全螢幕':'⛶ 全螢幕';scheduleFullscreenFit();});
     window.addEventListener('resize',scheduleFullscreenFit);
     if('ResizeObserver' in window)new ResizeObserver(scheduleFullscreenFit).observe(document.querySelector('.shell'));
   </script>
